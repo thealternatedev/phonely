@@ -1,0 +1,33 @@
+{
+  "name": "phonely",
+  "version": "1.0.0",
+  "description": "A Discord bot for creating phone-like connections between channels",
+  "main": "src/main.ts",
+  "scripts": {
+    "start": "npm run format && npm run build && node build/main.js",
+    "build": "yarn tsc",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "phone",
+    "communication",
+    "typescript"
+  ],
+  "author": "Phonely Bot Team",
+  "license": "MIT",
+  "dependencies": {
+    "cli-color": "^2.0.4",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5",
+    "yaml": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "prettier": "^3.2.5",
+    "typescript": "^5.5.4",
+    "tsc": "^2.0.4",
+    "yarn": "^1.22.22"
+  }
+}
