@@ -25,12 +25,14 @@ export interface Command {
   ) => Awaitable<void>;
   data?: SlashCommandBuilder;
   aliases?: string[];
+  cooldown?: number; // Cooldown in seconds
 }
 
 export class CommandManager {
   private commands = new Collection<string, Command>();
   private readonly aliases = new Collection<string, string>();
   private readonly commandsPath: string;
+  private cooldowns = new Collection<string, Collection<string, number>>();
 
   constructor() {
     // Using process.cwd() to get the project root directory
@@ -90,6 +92,7 @@ export class CommandManager {
       // Clear existing commands and aliases
       this.commands.clear();
       this.aliases.clear();
+      this.cooldowns.clear();
 
       // Reload all commands
       await this.loadCommands();
@@ -154,18 +157,49 @@ export class CommandManager {
     args: string[] = [],
   ) {
     try {
-      if (source instanceof ChatInputCommandInteraction) {
-        const command = this.getCommand(commandName);
-        if (!command) return;
-        await command.execute(client, source);
-        return;
+      const command = this.getCommand(commandName) || 
+                     this.getCommand(this.aliases.get(commandName) || "");
+      
+      if (!command) return;
+
+      // Check for cooldown
+      const userId = source instanceof ChatInputCommandInteraction ? 
+                    source.user.id : 
+                    source.author.id;
+
+      if (!this.cooldowns.has(command.name)) {
+        this.cooldowns.set(command.name, new Collection());
       }
 
-      const command =
-        this.getCommand(commandName) ||
-        this.getCommand(this.aliases.get(commandName) || "");
-      if (!command?.executeMessage) return;
-      await command.executeMessage(client, source, args);
+      const now = Date.now();
+      const timestamps = this.cooldowns.get(command.name)!;
+      const cooldownAmount = (command.cooldown || 3) * 1000; // Default 3 second cooldown
+
+      if (timestamps.has(userId)) {
+        const expirationTime = timestamps.get(userId)! + cooldownAmount;
+
+        if (now < expirationTime) {
+          const timeLeft = (expirationTime - now) / 1000;
+          const errorMessage = `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`;
+          
+          if (source instanceof ChatInputCommandInteraction) {
+            return source.reply({ content: errorMessage, ephemeral: true });
+          } else {
+            return source.reply(errorMessage);
+          }
+        }
+      }
+
+      timestamps.set(userId, now);
+      setTimeout(() => timestamps.delete(userId), cooldownAmount);
+
+      // Execute command
+      if (source instanceof ChatInputCommandInteraction) {
+        await command.execute(client, source);
+      } else if (command.executeMessage) {
+        await command.executeMessage(client, source, args);
+      }
+
     } catch (error) {
       console.error(clc.red(`Error executing command ${commandName}:`), error);
 
