@@ -8,51 +8,53 @@ import { Command } from "../CommandManager.js";
 import { PhonelyClient } from "../Phonely.js";
 import { createErrorEmbed, createSuccessEmbed } from "../utils/embeds.js";
 
+// Helper function to handle common connection logic
+async function handleConnect(
+  client: PhonelyClient,
+  channel: TextChannel,
+  reply: (embed: ReturnType<typeof createErrorEmbed | typeof createSuccessEmbed>) => Promise<void>
+) {
+  if (!(channel instanceof TextChannel)) {
+    await reply(createErrorEmbed("This command can only be used in text channels!"));
+    return;
+  }
+
+  await client.userPhoneConnections.connect(channel, reply);
+}
+
 const ConnectCommand: Command = {
   name: "connect",
   aliases: ["c"],
 
-  // Add slash command data
   data: new SlashCommandBuilder()
     .setName("connect")
     .setDescription("Connect to another channel waiting for a call"),
 
-  // Handler for slash commands
   async execute(
     client: PhonelyClient,
     interaction: ChatInputCommandInteraction<"cached">,
   ) {
-    if (!(interaction.channel instanceof TextChannel)) {
-      interaction.reply({
-        embeds: [
-          createErrorEmbed("This command can only be used in text channels!"),
-        ],
-        ephemeral: true,
-      });
-      return;
-    }
-
-    await client.userPhoneConnections.connect(
-      interaction.channel,
+    await handleConnect(
+      client,
+      interaction.channel as TextChannel,
       async (embed) => {
-        await interaction.reply({ embeds: [embed] });
-      },
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+      }
     );
   },
 
-  // Handler for message commands
   async executeMessage(
-    client: PhonelyClient,
-    message: Message,
-    args: string[],
+    client: PhonelyClient, 
+    message: Message<true>,
+    args: string[]
   ) {
     if (!(message.channel instanceof TextChannel)) return;
-
-    await client.userPhoneConnections.connect(
+    await handleConnect(
+      client,
       message.channel,
       async (embed) => {
         await message.reply({ embeds: [embed] });
-      },
+      }
     );
   },
 };

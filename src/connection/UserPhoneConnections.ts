@@ -18,11 +18,11 @@ export class UserPhoneConnections {
   ) {
     // Check if channel is already connected or in queue
     const isInQueue = this.client.channelQueue.values().includes(channel);
-    const isConnected = [...this.client.connectedServers.values()].some(
-      (server) =>
-        server.getCallerSideChannel().id === channel.id ||
-        server.getReceiverSideChannel().id === channel.id,
-    );
+    const isConnected = this.client.activeServers.getIds().some(id => {
+      const server = this.client.activeServers.get(id);
+      return server?.getCallerSideChannel().id === channel.id ||
+             server?.getReceiverSideChannel().id === channel.id;
+    });
 
     if (isInQueue)
       return reply(createErrorEmbed("This channel is already in the queue!"));
@@ -53,13 +53,13 @@ export class UserPhoneConnections {
     ) => Promise<void>,
   ) {
     // Check if either channel is already connected
-    const isEitherConnected = [...this.client.connectedServers.values()].some(
-      (server) =>
-        server.getCallerSideChannel().id === channel.id ||
-        server.getReceiverSideChannel().id === channel.id ||
-        server.getCallerSideChannel().id === targetChannel.id ||
-        server.getReceiverSideChannel().id === targetChannel.id,
-    );
+    const isEitherConnected = this.client.activeServers.getIds().some(id => {
+      const server = this.client.activeServers.get(id);
+      return server?.getCallerSideChannel().id === channel.id ||
+             server?.getReceiverSideChannel().id === channel.id ||
+             server?.getCallerSideChannel().id === targetChannel.id ||
+             server?.getReceiverSideChannel().id === targetChannel.id;
+    });
 
     if (isEitherConnected)
       return reply(
@@ -78,11 +78,11 @@ export class UserPhoneConnections {
   ) {
     // Similar to connect but with custom duration
     const isInQueue = this.client.channelQueue.values().includes(channel);
-    const isConnected = [...this.client.connectedServers.values()].some(
-      (server) =>
-        server.getCallerSideChannel().id === channel.id ||
-        server.getReceiverSideChannel().id === channel.id,
-    );
+    const isConnected = this.client.activeServers.getIds().some(id => {
+      const server = this.client.activeServers.get(id);
+      return server?.getCallerSideChannel().id === channel.id ||
+             server?.getReceiverSideChannel().id === channel.id;
+    });
 
     if (isInQueue)
       return reply(createErrorEmbed("This channel is already in the queue!"));
@@ -120,7 +120,7 @@ export class UserPhoneConnections {
       channelOne,
       channelTwo,
     );
-    this.client.connectedServers.set(serverId, phoneServer);
+    this.client.activeServers.add(serverId, phoneServer);
 
     const successEmbed = createSuccessEmbed(
       `Connected to a channel! You can now chat for ${duration / 1000} seconds before traffic disconnects the call.`,
@@ -137,10 +137,10 @@ export class UserPhoneConnections {
   }
 
   public async disconnect(serverId: string) {
-    const server = this.client.connectedServers.get(serverId);
+    const server = this.client.activeServers.get(serverId);
     if (!server) return;
 
-    this.client.connectedServers.delete(serverId);
+    this.client.activeServers.remove(serverId);
 
     await server.hangup();
 

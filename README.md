@@ -1,4 +1,4 @@
-![Phonely Bot Banner](./assets/phone_no_text_banner.png)
+![Phonely Bot Banner](./assets/phonely_no_text_banner.png)
 
 
 # 📞 Phonely Bot - Connect Your Discord World! 
