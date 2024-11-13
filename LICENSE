@@ -1,18 +1,26 @@
-Copyright (c) 2024 Phonely Bot. All rights reserved.
+Copyright (c) 2024 Phonely Bot
 
-This software and associated documentation files (the "Software") are proprietary
-and confidential. The Software may not be used, copied, modified, merged,
-published, distributed, sublicensed, sold, or otherwise transferred, in whole or
-in part, without the express written permission of Phonely Bot.
+Permission is hereby granted to use, copy, modify, and distribute this software
+and its documentation files (the "Software"), subject to the following conditions:
 
-Unauthorized copying, distribution, modification, public display, or public
-performance of the Software is strictly prohibited. No license, express or
-implied, to any intellectual property rights is granted by this document.
+1. Appropriate credit must be given to Phonely Bot as the original creator in all
+   copies or substantial portions of the Software.
 
-The Software is provided "AS IS", without warranty of any kind. In no event shall
-Phonely Bot be liable for any claim, damages or other liability arising from or
-in connection with the Software or its use.
+2. Any modifications to the original code must be clearly indicated as such.
 
-All trademarks, service marks, trade names, product names and logos appearing in
-the Software are the property of their respective owners. Any rights not
-expressly granted herein are reserved by Phonely Bot.
+3. The "Phonely" name, branding, and identity may not be used for distribution
+   of the Software.
+
+4. A link to the original Phonely repository must be included with any
+   distribution of the Software.
+
+For commercial use of the Software, prior written permission must be obtained
+from Phonely Bot.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

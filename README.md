@@ -133,11 +133,13 @@ Need help? Found a bug? Have a feature request?
 
 Remember to ⭐ the repo if you find it helpful!
 
-## ⚠️ Warning: Private Server Use Only
+## 📝 Distribution Terms
 
-This bot is intended for private Discord server use only. You may use and modify the code for your own private servers, but you are not permitted to:
-- Publicly distribute this bot as "Phonely"
-- Host public instances of this bot without substantial modifications
-- Use this bot's branding or identity
+This bot is open source and can be freely distributed under the following conditions:
 
-Any unauthorized public distribution or hosting of this bot under the Phonely name will be reported to Discord and the bot will be removed. Please respect these usage terms.
+- You must provide appropriate credit to Phonely Bot as the original creator
+- You must clearly indicate if you've made modifications to the original code
+- You may not use the "Phonely" name, branding, or identity for your distribution
+- You must include a link to the original Phonely repository
+
+We encourage you to build upon and share this code while respecting these attribution requirements. For any commercial use, please contact us first.
