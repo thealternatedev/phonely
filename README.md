@@ -44,9 +44,12 @@ Transform your Discord server into a vibrant communication hub with Phonely Bot 
 ✅ Message Forwarding  
 ✅ Connection Status Updates  
 ✅ Multi-Channel Conference Calls  
+✅ Database Support  
+✅ Trafficking Management  
+✅ Untrusted Link Blocking System  
+❌ Custom Connection Durations  
 ❌ Voice Channel Support  
 ❌ File Sharing Capabilities   
-❌ Custom Connection Durations  
 ❌ Server Blacklisting  
 ❌ User Blocking System  
 ❌ Connection History  
@@ -75,7 +78,11 @@ Transform your Discord server into a vibrant communication hub with Phonely Bot 
    - Add your Discord bot token
    - Customize any other settings
 
-4. Launch the network:
+4. Configure your bot.yml file:
+   - Add database information such as host, port, username, and password
+   - Configure other stuff if needed.
+
+5. Launch the network:
    ```bash
    yarn start
    ```

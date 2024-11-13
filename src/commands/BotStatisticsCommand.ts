@@ -5,8 +5,8 @@ import {
   EmbedBuilder,
   Colors,
 } from "discord.js";
-import { Command } from "../CommandManager.js";
-import { PhonelyClient } from "../Phonely.js";
+import { Command } from "../CommandManager";
+import { PhonelyClient } from "../Phonely";
 
 const formatUptime = (uptime: number): string => {
   const days = Math.floor(uptime / (1000 * 60 * 60 * 24));

@@ -5,9 +5,8 @@ import {
   EmbedBuilder,
   Colors,
 } from "discord.js";
-import { Command } from "../CommandManager.js";
-import { PhonelyClient } from "../Phonely.js";
-import { createSuccessEmbed } from "../utils/embeds.js";
+import { Command } from "../CommandManager";
+import { PhonelyClient } from "../Phonely";
 
 const PingCommand: Command = {
   name: "ping",

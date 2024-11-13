@@ -14,7 +14,7 @@ export class Queue<T> {
    */
   constructor(maxSize: number = 1000) {
     if (maxSize <= 0) {
-      throw new Error('Queue size must be greater than 0');
+      throw new Error("Queue size must be greater than 0");
     }
     this.items = [];
     this.maxSize = maxSize;

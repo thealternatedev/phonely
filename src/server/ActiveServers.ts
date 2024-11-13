@@ -1,4 +1,4 @@
-import { UserPhoneServer } from "./UserPhoneServer.js";
+import { UserPhoneServer } from "./UserPhoneServer";
 import { TextChannel } from "discord.js";
 
 /**
@@ -8,7 +8,7 @@ import { TextChannel } from "discord.js";
 export class ActiveServers {
   /** Map of server IDs to UserPhoneServer instances */
   private servers: Record<string, UserPhoneServer>;
-  
+
   /**
    * Creates a new ActiveServers instance with an empty servers object.
    * Uses Object.create(null) for a "pure" object with no prototype chain.
@@ -81,10 +81,13 @@ export class ActiveServers {
    * @param channel - Channel to search for
    * @returns Server ID and instance if found, undefined otherwise
    */
-  public findByChannel(channel: TextChannel): [string, UserPhoneServer] | undefined {
-    const entry = Object.entries(this.servers).find(([_, server]) => 
-      server.getCallerSideChannel().id === channel.id ||
-      server.getReceiverSideChannel().id === channel.id
+  public findByChannel(
+    channel: TextChannel,
+  ): [string, UserPhoneServer] | undefined {
+    const entry = Object.entries(this.servers).find(
+      ([_, server]) =>
+        server.getCallerSideChannel().id === channel.id ||
+        server.getReceiverSideChannel().id === channel.id,
     );
     return entry;
   }
@@ -110,9 +113,9 @@ export class ActiveServers {
    * @returns Array of active TextChannels
    */
   public getAllActiveChannels(): TextChannel[] {
-    return this.getAllServers().flatMap(server => [
+    return this.getAllServers().flatMap((server) => [
       server.getCallerSideChannel(),
-      server.getReceiverSideChannel()
+      server.getReceiverSideChannel(),
     ]);
   }
 

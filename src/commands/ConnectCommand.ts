@@ -4,18 +4,22 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from "discord.js";
-import { Command } from "../CommandManager.js";
-import { PhonelyClient } from "../Phonely.js";
-import { createErrorEmbed, createSuccessEmbed } from "../utils/embeds.js";
+import { Command } from "../CommandManager";
+import { PhonelyClient } from "../Phonely";
+import { createErrorEmbed, createSuccessEmbed } from "../utils/embeds";
 
 // Helper function to handle common connection logic
 async function handleConnect(
   client: PhonelyClient,
   channel: TextChannel,
-  reply: (embed: ReturnType<typeof createErrorEmbed | typeof createSuccessEmbed>) => Promise<void>
+  reply: (
+    embed: ReturnType<typeof createErrorEmbed | typeof createSuccessEmbed>,
+  ) => Promise<void>,
 ) {
   if (!(channel instanceof TextChannel)) {
-    await reply(createErrorEmbed("This command can only be used in text channels!"));
+    await reply(
+      createErrorEmbed("This command can only be used in text channels!"),
+    );
     return;
   }
 
@@ -39,23 +43,19 @@ const ConnectCommand: Command = {
       interaction.channel as TextChannel,
       async (embed) => {
         await interaction.reply({ embeds: [embed], ephemeral: true });
-      }
+      },
     );
   },
 
   async executeMessage(
-    client: PhonelyClient, 
+    client: PhonelyClient,
     message: Message<true>,
-    args: string[]
+    args: string[],
   ) {
     if (!(message.channel instanceof TextChannel)) return;
-    await handleConnect(
-      client,
-      message.channel,
-      async (embed) => {
-        await message.reply({ embeds: [embed] });
-      }
-    );
+    await handleConnect(client, message.channel, async (embed) => {
+      await message.reply({ embeds: [embed] });
+    });
   },
 };
 

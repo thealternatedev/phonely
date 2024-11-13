@@ -9,8 +9,8 @@ import {
   ComponentType,
   InteractionResponse,
 } from "discord.js";
-import { Command } from "../CommandManager.js";
-import { PhonelyClient } from "../Phonely.js";
+import { Command } from "../CommandManager";
+import { PhonelyClient } from "../Phonely";
 
 const COMMANDS_PER_PAGE = 5;
 const COLLECTOR_TIMEOUT = 300_000; // 5 minutes

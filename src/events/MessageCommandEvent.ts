@@ -1,5 +1,5 @@
 import { Message } from "discord.js";
-import { PhonelyClient } from "../Phonely.js";
+import { PhonelyClient } from "../Phonely";
 
 export default {
   name: "messageCreate",

@@ -1,8 +1,8 @@
 import { ClientEvents, Collection } from "discord.js";
 import { readdirSync } from "fs";
 import { join } from "path";
-import { PhonelyClient } from "./Phonely.js";
-import * as clc from "cli-color";
+import { PhonelyClient } from "./Phonely";
+import clc from "cli-color";
 
 // Type-safe event interface
 export interface Event<T extends keyof ClientEvents> {

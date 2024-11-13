@@ -4,9 +4,9 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from "discord.js";
-import { Command } from "../CommandManager.js";
-import { PhonelyClient } from "../Phonely.js";
-import { createErrorEmbed, createSuccessEmbed } from "../utils/embeds.js";
+import { Command } from "../CommandManager";
+import { PhonelyClient } from "../Phonely";
+import { createErrorEmbed, createSuccessEmbed } from "../utils/embeds";
 
 const DisconnectCommand: Command = {
   name: "disconnect",

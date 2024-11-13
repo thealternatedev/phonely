@@ -18,16 +18,20 @@
   "author": "Phonely Bot Team",
   "license": "MIT",
   "dependencies": {
+    "better-sqlite3": "^11.5.0",
     "cli-color": "^2.0.4",
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
+    "mongoose": "^8.8.1",
+    "mysql2": "^3.11.4",
+    "quick.db": "^9.1.7",
     "yaml": "^2.6.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.16",
     "prettier": "^3.2.5",
-    "typescript": "^5.5.4",
     "tsc": "^2.0.4",
+    "typescript": "^5.5.4",
     "yarn": "^1.22.22"
   }
 }

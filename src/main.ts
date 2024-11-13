@@ -1,6 +1,6 @@
 import * as DotEnv from "dotenv";
 import { GatewayIntentBits } from "discord.js";
-import { PhonelyClient } from "./Phonely.js";
+import { PhonelyClient } from "./Phonely";
 
 DotEnv.config();
 

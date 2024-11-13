@@ -4,9 +4,9 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
 } from "discord.js";
-import { Command } from "../CommandManager.js";
-import { PhonelyClient } from "../Phonely.js";
-import { createErrorEmbed, createSuccessEmbed } from "../utils/embeds.js";
+import { Command } from "../CommandManager";
+import { PhonelyClient } from "../Phonely";
+import { createErrorEmbed } from "../utils/embeds";
 
 // Configure the duration (in seconds) for temporary calls
 const TEMP_CALL_DURATION = 30; // 30 seconds

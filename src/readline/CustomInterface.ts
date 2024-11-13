@@ -1,6 +1,6 @@
 import { createInterface } from "readline";
-import { PhonelyClient } from "../Phonely.js";
-import * as clc from "cli-color";
+import { PhonelyClient } from "../Phonely";
+import clc from "cli-color";
 
 export class CustomInterface {
   private readonly rl;

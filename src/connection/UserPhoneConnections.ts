@@ -1,7 +1,7 @@
-import { Collection, TextChannel } from "discord.js";
-import { PhonelyClient } from "../Phonely.js";
-import { UserPhoneServer } from "../server/UserPhoneServer.js";
-import { createErrorEmbed, createSuccessEmbed } from "../utils/embeds.js";
+import { TextChannel } from "discord.js";
+import { PhonelyClient } from "../Phonely";
+import { UserPhoneServer } from "../server/UserPhoneServer";
+import { createErrorEmbed, createSuccessEmbed } from "../utils/embeds";
 
 export class UserPhoneConnections {
   private client: PhonelyClient;
@@ -18,10 +18,12 @@ export class UserPhoneConnections {
   ) {
     // Check if channel is already connected or in queue
     const isInQueue = this.client.channelQueue.values().includes(channel);
-    const isConnected = this.client.activeServers.getIds().some(id => {
+    const isConnected = this.client.activeServers.getIds().some((id) => {
       const server = this.client.activeServers.get(id);
-      return server?.getCallerSideChannel().id === channel.id ||
-             server?.getReceiverSideChannel().id === channel.id;
+      return (
+        server?.getCallerSideChannel().id === channel.id ||
+        server?.getReceiverSideChannel().id === channel.id
+      );
     });
 
     if (isInQueue)
@@ -53,12 +55,14 @@ export class UserPhoneConnections {
     ) => Promise<void>,
   ) {
     // Check if either channel is already connected
-    const isEitherConnected = this.client.activeServers.getIds().some(id => {
+    const isEitherConnected = this.client.activeServers.getIds().some((id) => {
       const server = this.client.activeServers.get(id);
-      return server?.getCallerSideChannel().id === channel.id ||
-             server?.getReceiverSideChannel().id === channel.id ||
-             server?.getCallerSideChannel().id === targetChannel.id ||
-             server?.getReceiverSideChannel().id === targetChannel.id;
+      return (
+        server?.getCallerSideChannel().id === channel.id ||
+        server?.getReceiverSideChannel().id === channel.id ||
+        server?.getCallerSideChannel().id === targetChannel.id ||
+        server?.getReceiverSideChannel().id === targetChannel.id
+      );
     });
 
     if (isEitherConnected)
@@ -78,10 +82,12 @@ export class UserPhoneConnections {
   ) {
     // Similar to connect but with custom duration
     const isInQueue = this.client.channelQueue.values().includes(channel);
-    const isConnected = this.client.activeServers.getIds().some(id => {
+    const isConnected = this.client.activeServers.getIds().some((id) => {
       const server = this.client.activeServers.get(id);
-      return server?.getCallerSideChannel().id === channel.id ||
-             server?.getReceiverSideChannel().id === channel.id;
+      return (
+        server?.getCallerSideChannel().id === channel.id ||
+        server?.getReceiverSideChannel().id === channel.id
+      );
     });
 
     if (isInQueue)

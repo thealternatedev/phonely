@@ -1,2 +1,53 @@
+#===============================================#
+#      ____  _                      _           #
+#     |  _ \| |__   ___  _ __   ___| |_   _     #
+#     | |_) | '_ \ / _ \| '_ \ / _ \ | | | |    #
+#     |  __/| | | | (_) | | | |  __/ | |_| |    #
+#     |_|   |_| |_|\___/|_| |_|\___|_|\__, |    #
+#                                     |___/     #
+#===============================================#
+# Phonely is a Discord bot that enables users   #
+# to create virtual phone connections between   #
+# Discord channels. It allows servers to        #
+# communicate with each other through a phone-  #
+# like interface, creating unique interaction   #
+# opportunities across Discord communities.     #
+#                                               #
+# Key Features:                                 #
+# - Channel-to-channel connections              #
+# - Phone-like communication system             #
+# - Server management tools                     #
+# - Customizable settings                       #
+#===============================================#
 
+config_version: 1
 
+#===============================================#
+#              Database Settings                #
+#===============================================#
+# Database configuration for Phonely bot
+# Supports both SQLite and MySQL databases
+#
+# For SQLite:
+# - Set type: sqlite
+# - Only name is required
+# - File will be created as {name}.phonelydb
+#
+# For MySQL:
+# - Set type: mysql 
+# - Requires host, user, password, and name
+# - Ensure MySQL server is running and accessible
+#===============================================#
+
+database:
+  # Database type - can be 'sqlite' or 'mysql'
+  type: sqlite
+  
+  # SQLite configuration
+  # Database name (will be created as {name}.phonelydb)
+  name: phonely
+
+  # MySQL configuration (only used if type is 'mysql')
+  host: localhost
+  user: root
+  password: ''

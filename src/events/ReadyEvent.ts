@@ -1,8 +1,8 @@
-import { ActivityType, Client, Events } from "discord.js";
-import { Event } from "../EventManager.js";
-import { PhonelyClient } from "../Phonely.js";
-import { CustomInterface } from "../readline/CustomInterface.js";
-import * as clc from "cli-color";
+import { ActivityType } from "discord.js";
+import { Event } from "../EventManager";
+import { PhonelyClient } from "../Phonely";
+import { CustomInterface } from "../readline/CustomInterface";
+import clc from "cli-color";
 
 const event: Event<"ready"> = {
   name: "ready",

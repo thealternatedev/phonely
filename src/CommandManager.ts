@@ -9,8 +9,8 @@ import {
 } from "discord.js";
 import { readdirSync } from "fs";
 import { join } from "path";
-import { PhonelyClient } from "./Phonely.js";
-import * as clc from "cli-color";
+import { PhonelyClient } from "./Phonely";
+import clc from "cli-color";
 
 export interface Command {
   name: string;

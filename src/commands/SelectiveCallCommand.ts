@@ -8,9 +8,9 @@ import {
   ComponentType,
   StringSelectMenuInteraction,
 } from "discord.js";
-import { Command } from "../CommandManager.js";
-import { PhonelyClient } from "../Phonely.js";
-import { createErrorEmbed, createSuccessEmbed } from "../utils/embeds.js";
+import { Command } from "../CommandManager";
+import { PhonelyClient } from "../Phonely";
+import { createErrorEmbed, createSuccessEmbed } from "../utils/embeds";
 
 const SELECTION_TIMEOUT = 30000; // 30 seconds to select a channel
 
@@ -77,9 +77,9 @@ const SelectiveCallCommand: Command = {
 
       // Find selected channel in queue values
       const selectedChannel = availableChannels.find(
-        channel => channel.id === selectInteraction.values[0]
+        (channel) => channel.id === selectInteraction.values[0],
       );
-      
+
       if (!selectedChannel) {
         await selectInteraction.update({
           embeds: [
@@ -151,7 +151,7 @@ const SelectiveCallCommand: Command = {
 
       // Find selected channel in queue values
       const selectedChannel = availableChannels.find(
-        channel => channel.id === selectInteraction.values[0]
+        (channel) => channel.id === selectInteraction.values[0],
       );
 
       if (!selectedChannel) {

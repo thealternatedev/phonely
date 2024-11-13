@@ -1,10 +1,6 @@
-import {
-  Message,
-  TextChannel,
-  MessageCollector,
-} from "discord.js";
-import { PhonelyClient } from "../Phonely.js";
-import * as EventEmitter from "events";
+import { Message, TextChannel, MessageCollector } from "discord.js";
+import { PhonelyClient } from "../Phonely";
+import EventEmitter from "events";
 
 export interface UserPhoneServerEvents {
   messageReceived: (message: Message) => void;
@@ -15,7 +11,7 @@ export interface UserPhoneServerEvents {
 
 const trustedLinks: string[] = [
   "youtube.com",
-  "x.com", 
+  "x.com",
   "twitter.com",
   "tiktok.com",
   "instagram.com",
@@ -117,7 +113,9 @@ export class UserPhoneServer extends EventEmitter {
       const words = content.split(" ");
       for (const word of words) {
         if (word.startsWith("http://") || word.startsWith("https://")) {
-          const isUntrusted = !trustedLinks.some(trusted => word.includes(trusted));
+          const isUntrusted = !trustedLinks.some((trusted) =>
+            word.includes(trusted),
+          );
           if (isUntrusted) return word;
         }
       }
@@ -128,7 +126,9 @@ export class UserPhoneServer extends EventEmitter {
     this.callerCollector.on("collect", (msg) => {
       const untrustedLink = hasUntrustedLink(msg.content);
       if (untrustedLink) {
-        msg.reply({ content: `⚠️ Your message was not sent because it contains an untrusted link: ${untrustedLink}` });
+        msg.reply({
+          content: `⚠️ Your message was not sent because it contains an untrusted link: ${untrustedLink}`,
+        });
         this.emit("linkBlocked", untrustedLink);
         return;
       }
@@ -137,7 +137,9 @@ export class UserPhoneServer extends EventEmitter {
     this.receiverCollector.on("collect", (msg) => {
       const untrustedLink = hasUntrustedLink(msg.content);
       if (untrustedLink) {
-        msg.reply({ content: `⚠️ Your message was not sent because it contains an untrusted link: ${untrustedLink}` });
+        msg.reply({
+          content: `⚠️ Your message was not sent because it contains an untrusted link: ${untrustedLink}`,
+        });
         this.emit("linkBlocked", untrustedLink);
         return;
       }
