@@ -132,3 +132,12 @@ Need help? Found a bug? Have a feature request?
 - Check the documentation
 
 Remember to ⭐ the repo if you find it helpful!
+
+## ⚠️ Warning: Private Server Use Only
+
+This bot is intended for private Discord server use only. You may use and modify the code for your own private servers, but you are not permitted to:
+- Publicly distribute this bot as "Phonely"
+- Host public instances of this bot without substantial modifications
+- Use this bot's branding or identity
+
+Any unauthorized public distribution or hosting of this bot under the Phonely name will be reported to Discord and the bot will be removed. Please respect these usage terms.
