@@ -17,7 +17,7 @@ export class UserPhoneConnections {
     ) => Promise<void>,
   ) {
     // Check if channel is already connected or in queue
-    const isInQueue = this.client.channelQueue.has(channel.id);
+    const isInQueue = this.client.channelQueue.values().includes(channel);
     const isConnected = [...this.client.connectedServers.values()].some(
       (server) =>
         server.getCallerSideChannel().id === channel.id ||
@@ -30,8 +30,8 @@ export class UserPhoneConnections {
       return reply(createErrorEmbed("This channel is already in a call!"));
 
     // If queue is empty, add to queue and wait
-    if (this.client.channelQueue.size === 0) {
-      this.client.channelQueue.set(channel.id, channel);
+    if (this.client.channelQueue.size() === 0) {
+      this.client.channelQueue.enqueue(channel);
       await reply(
         createSuccessEmbed("Waiting for another channel to connect..."),
       );
@@ -39,15 +39,8 @@ export class UserPhoneConnections {
     }
 
     // Get and remove first channel from queue
-    const [firstChannelId, queuedChannel] = this.client.channelQueue.firstKey()
-      ? [
-          this.client.channelQueue.firstKey()!,
-          this.client.channelQueue.first()!,
-        ]
-      : [null, null];
-
-    if (!firstChannelId || !queuedChannel) return;
-    this.client.channelQueue.delete(firstChannelId);
+    const queuedChannel = this.client.channelQueue.dequeue();
+    if (!queuedChannel) return;
 
     await this.createConnection(queuedChannel, channel, reply);
   }
@@ -84,7 +77,7 @@ export class UserPhoneConnections {
     ) => Promise<void>,
   ) {
     // Similar to connect but with custom duration
-    const isInQueue = this.client.channelQueue.has(channel.id);
+    const isInQueue = this.client.channelQueue.values().includes(channel);
     const isConnected = [...this.client.connectedServers.values()].some(
       (server) =>
         server.getCallerSideChannel().id === channel.id ||
@@ -96,8 +89,8 @@ export class UserPhoneConnections {
     if (isConnected)
       return reply(createErrorEmbed("This channel is already in a call!"));
 
-    if (this.client.channelQueue.size === 0) {
-      this.client.channelQueue.set(channel.id, channel);
+    if (this.client.channelQueue.size() === 0) {
+      this.client.channelQueue.enqueue(channel);
       await reply(
         createSuccessEmbed(
           `Waiting for another channel to connect... Connection will last ${duration / 1000} seconds.`,
@@ -106,15 +99,8 @@ export class UserPhoneConnections {
       return;
     }
 
-    const [firstChannelId, queuedChannel] = this.client.channelQueue.firstKey()
-      ? [
-          this.client.channelQueue.firstKey()!,
-          this.client.channelQueue.first()!,
-        ]
-      : [null, null];
-
-    if (!firstChannelId || !queuedChannel) return;
-    this.client.channelQueue.delete(firstChannelId);
+    const queuedChannel = this.client.channelQueue.dequeue();
+    if (!queuedChannel) return;
 
     await this.createConnection(queuedChannel, channel, reply, duration);
   }

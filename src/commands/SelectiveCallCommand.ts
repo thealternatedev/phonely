@@ -39,7 +39,7 @@ const SelectiveCallCommand: Command = {
     }
 
     // Get available channels from queue
-    const availableChannels = [...client.channelQueue.values()];
+    const availableChannels = client.channelQueue.values();
     if (availableChannels.length === 0) {
       await interaction.reply({
         embeds: [
@@ -75,9 +75,11 @@ const SelectiveCallCommand: Command = {
         time: SELECTION_TIMEOUT,
       })) as StringSelectMenuInteraction;
 
-      const selectedChannel = client.channelQueue.get(
-        selectInteraction.values[0],
+      // Find selected channel in queue values
+      const selectedChannel = availableChannels.find(
+        channel => channel.id === selectInteraction.values[0]
       );
+      
       if (!selectedChannel) {
         await selectInteraction.update({
           embeds: [
@@ -111,7 +113,7 @@ const SelectiveCallCommand: Command = {
     if (!(message.channel instanceof TextChannel)) return;
 
     // Get available channels from queue
-    const availableChannels = [...client.channelQueue.values()];
+    const availableChannels = client.channelQueue.values();
     if (availableChannels.length === 0) {
       await message.reply({
         embeds: [
@@ -147,9 +149,11 @@ const SelectiveCallCommand: Command = {
         time: SELECTION_TIMEOUT,
       })) as StringSelectMenuInteraction;
 
-      const selectedChannel = client.channelQueue.get(
-        selectInteraction.values[0],
+      // Find selected channel in queue values
+      const selectedChannel = availableChannels.find(
+        channel => channel.id === selectInteraction.values[0]
       );
+
       if (!selectedChannel) {
         await selectInteraction.update({
           embeds: [

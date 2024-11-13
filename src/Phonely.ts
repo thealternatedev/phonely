@@ -4,6 +4,7 @@ import { CommandManager } from "./CommandManager.js";
 import { UserPhoneServer } from "./server/UserPhoneServer.js";
 import { BotConfiguration } from "./configuration/BotConfiguration.js";
 import { UserPhoneConnections } from "./connection/UserPhoneConnections.js";
+import { Queue } from "./utils/Queue.js";
 
 export class PhonelyClient extends Client {
   public readonly commandManager: CommandManager;
@@ -12,7 +13,7 @@ export class PhonelyClient extends Client {
 
   public config: BotConfiguration;
 
-  public channelQueue: Collection<string, TextChannel>;
+  public channelQueue: Queue<TextChannel>;
   public connectedServers: Collection<string, UserPhoneServer>;
 
   constructor(options: ClientOptions) {
@@ -21,7 +22,7 @@ export class PhonelyClient extends Client {
     this.commandManager = new CommandManager();
     this.eventManager = new EventManager();
     this.config = new BotConfiguration();
-    this.channelQueue = new Collection();
+    this.channelQueue = new Queue();
     this.connectedServers = new Collection();
     this.userPhoneConnections = new UserPhoneConnections(this);
   }
