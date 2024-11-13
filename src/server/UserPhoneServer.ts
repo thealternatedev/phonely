@@ -2,7 +2,6 @@ import {
   Message,
   TextChannel,
   MessageCollector,
-  EmbedBuilder,
 } from "discord.js";
 import { PhonelyClient } from "../Phonely.js";
 import * as EventEmitter from "events";
@@ -11,7 +10,20 @@ export interface UserPhoneServerEvents {
   messageReceived: (message: Message) => void;
   hangup: () => void;
   ready: () => void;
+  linkBlocked: (link: string) => void;
 }
+
+const trustedLinks: string[] = [
+  "youtube.com",
+  "x.com", 
+  "twitter.com",
+  "tiktok.com",
+  "instagram.com",
+  "facebook.com",
+  "twitch.tv",
+  "reddit.com",
+  "discord.gg",
+];
 
 export class UserPhoneServer extends EventEmitter {
   private callerCollector: MessageCollector;
@@ -100,13 +112,37 @@ export class UserPhoneServer extends EventEmitter {
     this.receiverCollector =
       this.receiverSideChannel.createMessageCollector(collectorOptions);
 
+    // Helper function to check for untrusted links
+    const hasUntrustedLink = (content: string) => {
+      const words = content.split(" ");
+      for (const word of words) {
+        if (word.startsWith("http://") || word.startsWith("https://")) {
+          const isUntrusted = !trustedLinks.some(trusted => word.includes(trusted));
+          if (isUntrusted) return word;
+        }
+      }
+      return null;
+    };
+
     // Bind message handlers
-    this.callerCollector.on("collect", (msg) =>
-      this.sendMessage(msg, "receiver"),
-    );
-    this.receiverCollector.on("collect", (msg) =>
-      this.sendMessage(msg, "caller"),
-    );
+    this.callerCollector.on("collect", (msg) => {
+      const untrustedLink = hasUntrustedLink(msg.content);
+      if (untrustedLink) {
+        msg.reply({ content: `⚠️ Your message was not sent because it contains an untrusted link: ${untrustedLink}` });
+        this.emit("linkBlocked", untrustedLink);
+        return;
+      }
+      this.sendMessage(msg, "receiver");
+    });
+    this.receiverCollector.on("collect", (msg) => {
+      const untrustedLink = hasUntrustedLink(msg.content);
+      if (untrustedLink) {
+        msg.reply({ content: `⚠️ Your message was not sent because it contains an untrusted link: ${untrustedLink}` });
+        this.emit("linkBlocked", untrustedLink);
+        return;
+      }
+      this.sendMessage(msg, "caller");
+    });
   }
 
   // Inline getters for better performance
