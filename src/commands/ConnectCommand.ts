@@ -3,6 +3,7 @@ import {
   TextChannel,
   SlashCommandBuilder,
   ChatInputCommandInteraction,
+  User,
 } from "discord.js";
 import { Command } from "../CommandManager";
 import { PhonelyClient } from "../Phonely";
@@ -12,18 +13,27 @@ import { createErrorEmbed, createSuccessEmbed } from "../utils/embeds";
 async function handleConnect(
   client: PhonelyClient,
   channel: TextChannel,
+  user: User,
   reply: (
     embed: ReturnType<typeof createErrorEmbed | typeof createSuccessEmbed>,
   ) => Promise<void>,
 ) {
   if (!(channel instanceof TextChannel)) {
     await reply(
-      createErrorEmbed("This command can only be used in text channels!"),
+      createErrorEmbed("📝 This command can only be used in text channels!"),
     );
     return;
   }
 
-  await client.userPhoneConnections.connect(channel, reply);
+  // Check if user is banned
+  if (await client.phonelyService.isUserBanned(user)) {
+    await reply(
+      createErrorEmbed("🚫 You are banned from using the phone system."),
+    );
+    return;
+  }
+
+  await client.userPhoneConnections.connect(channel, reply, user);
 }
 
 const ConnectCommand: Command = {
@@ -32,7 +42,7 @@ const ConnectCommand: Command = {
 
   data: new SlashCommandBuilder()
     .setName("connect")
-    .setDescription("Connect to another channel waiting for a call"),
+    .setDescription("📞 Connect to another channel waiting for a call"),
 
   async execute(
     client: PhonelyClient,
@@ -41,6 +51,7 @@ const ConnectCommand: Command = {
     await handleConnect(
       client,
       interaction.channel as TextChannel,
+      interaction.user,
       async (embed) => {
         await interaction.reply({ embeds: [embed], ephemeral: true });
       },
@@ -53,9 +64,14 @@ const ConnectCommand: Command = {
     args: string[],
   ) {
     if (!(message.channel instanceof TextChannel)) return;
-    await handleConnect(client, message.channel, async (embed) => {
-      await message.reply({ embeds: [embed] });
-    });
+    await handleConnect(
+      client,
+      message.channel,
+      message.author,
+      async (embed) => {
+        await message.reply({ embeds: [embed] });
+      },
+    );
   },
 };
 

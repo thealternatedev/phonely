@@ -7,6 +7,7 @@ import {
   StringSelectMenuBuilder,
   ComponentType,
   StringSelectMenuInteraction,
+  User,
 } from "discord.js";
 import { Command } from "../CommandManager";
 import { PhonelyClient } from "../Phonely";
@@ -21,7 +22,7 @@ const SelectiveCallCommand: Command = {
   data: new SlashCommandBuilder()
     .setName("selectcall")
     .setDescription(
-      "Select a specific channel to call from the available queue",
+      "📞 Select a specific channel to call from the available queue",
     ),
 
   async execute(
@@ -31,78 +32,33 @@ const SelectiveCallCommand: Command = {
     if (!(interaction.channel instanceof TextChannel)) {
       await interaction.reply({
         embeds: [
-          createErrorEmbed("This command can only be used in text channels!"),
+          createErrorEmbed(
+            "❌ This command can only be used in text channels!",
+          ),
         ],
         ephemeral: true,
       });
       return;
     }
 
-    // Get available channels from queue
-    const availableChannels = client.channelQueue.values();
-    if (availableChannels.length === 0) {
-      await interaction.reply({
-        embeds: [
-          createErrorEmbed("No channels are currently available to call!"),
-        ],
-      });
-      return;
-    }
-
-    // Create and handle selection menu
-    const selectMenu = new StringSelectMenuBuilder()
-      .setCustomId("channel_select")
-      .setPlaceholder("Select a channel to call")
-      .addOptions(
-        availableChannels.map((channel) => ({
-          label: channel.name,
-          description: `#${channel.name} in ${channel.guild.name}`,
-          value: channel.id,
-        })),
-      );
-
-    const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-      selectMenu,
+    await handleSelectiveCall(
+      client,
+      interaction.channel,
+      interaction.user,
+      async (embed, components = []) => {
+        if (!interaction.replied) {
+          await interaction.reply({ embeds: [embed], components });
+        } else {
+          await interaction.editReply({ embeds: [embed], components });
+        }
+      },
+      (response) =>
+        response.awaitMessageComponent({
+          componentType: ComponentType.StringSelect,
+          time: SELECTION_TIMEOUT,
+          filter: (i) => i.user.id === interaction.user.id,
+        }),
     );
-    const response = await interaction.reply({
-      embeds: [createSuccessEmbed("Select a channel to call:")],
-      components: [row],
-    });
-
-    try {
-      const selectInteraction = (await response.awaitMessageComponent({
-        componentType: ComponentType.StringSelect,
-        time: SELECTION_TIMEOUT,
-      })) as StringSelectMenuInteraction;
-
-      // Find selected channel in queue values
-      const selectedChannel = availableChannels.find(
-        (channel) => channel.id === selectInteraction.values[0],
-      );
-
-      if (!selectedChannel) {
-        await selectInteraction.update({
-          embeds: [
-            createErrorEmbed("Selected channel is no longer available!"),
-          ],
-          components: [],
-        });
-        return;
-      }
-
-      await client.userPhoneConnections.selectiveConnect(
-        interaction.channel,
-        selectedChannel,
-        async (embed) => {
-          await selectInteraction.update({ embeds: [embed], components: [] });
-        },
-      );
-    } catch (error) {
-      await interaction.editReply({
-        embeds: [createErrorEmbed("Channel selection timed out!")],
-        components: [],
-      });
-    }
   },
 
   async executeMessage(
@@ -112,72 +68,100 @@ const SelectiveCallCommand: Command = {
   ) {
     if (!(message.channel instanceof TextChannel)) return;
 
-    // Get available channels from queue
-    const availableChannels = client.channelQueue.values();
-    if (availableChannels.length === 0) {
-      await message.reply({
+    await handleSelectiveCall(
+      client,
+      message.channel,
+      message.author,
+      async (embed, components = []) => {
+        return message.reply({ embeds: [embed], components });
+      },
+      (response) =>
+        response.awaitMessageComponent({
+          componentType: ComponentType.StringSelect,
+          time: SELECTION_TIMEOUT,
+          filter: (i) => i.user.id === message.author.id,
+        }),
+    );
+  },
+};
+
+async function handleSelectiveCall(
+  client: PhonelyClient,
+  channel: TextChannel,
+  user: User,
+  reply: (
+    embed: ReturnType<typeof createErrorEmbed | typeof createSuccessEmbed>,
+    components?: any[],
+  ) => Promise<any>,
+  awaitComponent: (response: any) => Promise<StringSelectMenuInteraction>,
+) {
+  // Check if user is banned
+  if (await client.phonelyService.isUserBanned(user)) {
+    await reply(
+      createErrorEmbed("🚫 You are banned from using the phone system."),
+    );
+    return;
+  }
+
+  // Get available channels from queue
+  const availableChannels = client.channelQueue.values();
+  if (availableChannels.length === 0) {
+    await reply(
+      createErrorEmbed("📭 No channels are currently available to call!"),
+    );
+    return;
+  }
+
+  // Create and handle selection menu
+  const selectMenu = new StringSelectMenuBuilder()
+    .setCustomId("channel_select")
+    .setPlaceholder("📞 Select a channel to call")
+    .addOptions(
+      availableChannels.map((channel) => ({
+        label: channel.name,
+        description: `📌 #${channel.name} in ${channel.guild.name}`,
+        value: channel.id,
+      })),
+    );
+
+  const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+    selectMenu,
+  );
+
+  const response = await reply(
+    createSuccessEmbed("📱 Select a channel to call:"),
+    [row],
+  );
+
+  try {
+    const selectInteraction = await awaitComponent(response);
+
+    // Find selected channel in queue values
+    const selectedChannel = availableChannels.find(
+      (channel) => channel.id === selectInteraction.values[0],
+    );
+
+    if (!selectedChannel) {
+      await selectInteraction.update({
         embeds: [
-          createErrorEmbed("No channels are currently available to call!"),
+          createErrorEmbed("❌ Selected channel is no longer available!"),
         ],
+        components: [],
       });
       return;
     }
 
-    // Create and handle selection menu
-    const selectMenu = new StringSelectMenuBuilder()
-      .setCustomId("channel_select")
-      .setPlaceholder("Select a channel to call")
-      .addOptions(
-        availableChannels.map((channel) => ({
-          label: channel.name,
-          description: `#${channel.name} in ${channel.guild.name}`,
-          value: channel.id,
-        })),
-      );
-
-    const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-      selectMenu,
+    await client.userPhoneConnections.selectiveConnect(
+      channel,
+      selectedChannel,
+      async (embed) => {
+        await selectInteraction.update({ embeds: [embed], components: [] });
+      },
+      user,
     );
-    const response = await message.reply({
-      embeds: [createSuccessEmbed("Select a channel to call:")],
-      components: [row],
-    });
-
-    try {
-      const selectInteraction = (await response.awaitMessageComponent({
-        componentType: ComponentType.StringSelect,
-        time: SELECTION_TIMEOUT,
-      })) as StringSelectMenuInteraction;
-
-      // Find selected channel in queue values
-      const selectedChannel = availableChannels.find(
-        (channel) => channel.id === selectInteraction.values[0],
-      );
-
-      if (!selectedChannel) {
-        await selectInteraction.update({
-          embeds: [
-            createErrorEmbed("Selected channel is no longer available!"),
-          ],
-          components: [],
-        });
-        return;
-      }
-
-      await client.userPhoneConnections.selectiveConnect(
-        message.channel,
-        selectedChannel,
-        async (embed) => {
-          await selectInteraction.update({ embeds: [embed], components: [] });
-        },
-      );
-    } catch (error) {
-      await message.edit({
-        embeds: [createErrorEmbed("Channel selection timed out!")],
-        components: [],
-      });
-    }
-  },
-};
+  } catch (error) {
+    await reply(createErrorEmbed("⏰ Channel selection timed out!"), []);
+  }
+}
 
 export default SelectiveCallCommand;

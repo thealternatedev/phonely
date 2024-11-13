@@ -86,7 +86,6 @@ const event: Event<"ready"> = {
       { type: ActivityType.Playing, message: "Try /help to Get Started ⭐" },
       { type: ActivityType.Playing, message: "Phone Roulette 🎲" },
       { type: ActivityType.Watching, message: "Channels Connect 🔄" },
-      { type: ActivityType.Playing, message: "Speed Dating Mode ⚡" },
       { type: ActivityType.Listening, message: "Conference Calls 👥" },
       { type: ActivityType.Playing, message: "Making New Friends 🤝" },
       { type: ActivityType.Watching, message: "Messages Flow 📨" },

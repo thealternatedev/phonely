@@ -14,7 +14,7 @@ const DisconnectCommand: Command = {
 
   data: new SlashCommandBuilder()
     .setName("disconnect")
-    .setDescription("End your current active call"),
+    .setDescription("📞 End your current active call"),
 
   // Helper function to handle disconnection logic
 
@@ -25,7 +25,9 @@ const DisconnectCommand: Command = {
     if (!(interaction.channel instanceof TextChannel)) {
       await interaction.reply({
         embeds: [
-          createErrorEmbed("This command can only be used in text channels!"),
+          createErrorEmbed(
+            "❌ This command can only be used in text channels!",
+          ),
         ],
         ephemeral: true,
       });
@@ -66,12 +68,15 @@ async function handleDisconnect(
   });
 
   if (!serverEntry) {
-    await reply(createErrorEmbed("This channel is not in any active call!"));
+    await reply(createErrorEmbed("❌ This channel is not in any active call!"));
     return;
   }
 
-  await client.userPhoneConnections.disconnect(serverEntry);
-  await reply(createSuccessEmbed("Call ended successfully!"));
+  await client.userPhoneConnections.disconnect(
+    serverEntry,
+    "User disconnected",
+  );
+  await reply(createSuccessEmbed("✅ Call ended successfully!"));
 }
 
 export default DisconnectCommand;

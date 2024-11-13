@@ -6,6 +6,7 @@ import { UserPhoneConnections } from "./connection/UserPhoneConnections";
 import { Queue } from "./utils/Queue";
 import { ActiveServers } from "./server/ActiveServers";
 import { DatabaseManager } from "./database/DatabaseManager";
+import { PhonelyService } from "./service/PhonelyService";
 
 export class PhonelyClient extends Client {
   public readonly commandManager: CommandManager;
@@ -13,6 +14,7 @@ export class PhonelyClient extends Client {
   public readonly userPhoneConnections: UserPhoneConnections;
   public readonly activeServers: ActiveServers;
   public readonly databaseManager: DatabaseManager;
+  public readonly phonelyService: PhonelyService;
 
   public config: BotConfiguration;
 
@@ -28,5 +30,6 @@ export class PhonelyClient extends Client {
     this.channelQueue = new Queue();
     this.activeServers = new ActiveServers();
     this.userPhoneConnections = new UserPhoneConnections(this);
+    this.phonelyService = PhonelyService.getInstance(this.databaseManager);
   }
 }

@@ -6,6 +6,7 @@ import {
   ChatInputCommandInteraction,
   Awaitable,
   Message,
+  SlashCommandOptionsOnlyBuilder,
 } from "discord.js";
 import { readdirSync } from "fs";
 import { join } from "path";
@@ -23,7 +24,7 @@ export interface Command {
     message: Message<true>,
     args: string[],
   ) => Awaitable<void>;
-  data?: SlashCommandBuilder;
+  data?: SlashCommandBuilder | SlashCommandOptionsOnlyBuilder;
   aliases?: string[];
   cooldown?: number; // Cooldown in seconds
 }
@@ -157,15 +158,17 @@ export class CommandManager {
     args: string[] = [],
   ) {
     try {
-      const command = this.getCommand(commandName) || 
-                     this.getCommand(this.aliases.get(commandName) || "");
-      
+      const command =
+        this.getCommand(commandName) ||
+        this.getCommand(this.aliases.get(commandName) || "");
+
       if (!command) return;
 
       // Check for cooldown
-      const userId = source instanceof ChatInputCommandInteraction ? 
-                    source.user.id : 
-                    source.author.id;
+      const userId =
+        source instanceof ChatInputCommandInteraction
+          ? source.user.id
+          : source.author.id;
 
       if (!this.cooldowns.has(command.name)) {
         this.cooldowns.set(command.name, new Collection());
@@ -181,7 +184,7 @@ export class CommandManager {
         if (now < expirationTime) {
           const timeLeft = (expirationTime - now) / 1000;
           const errorMessage = `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`;
-          
+
           if (source instanceof ChatInputCommandInteraction) {
             return source.reply({ content: errorMessage, ephemeral: true });
           } else {
@@ -199,7 +202,6 @@ export class CommandManager {
       } else if (command.executeMessage) {
         await command.executeMessage(client, source, args);
       }
-
     } catch (error) {
       console.error(clc.red(`Error executing command ${commandName}:`), error);
 

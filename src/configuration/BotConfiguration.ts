@@ -9,6 +9,9 @@ export interface BotConfig {
     user?: string;
     password?: string;
   };
+  moderation?: {
+    banRoleId: string;
+  };
 }
 
 export class BotConfiguration {

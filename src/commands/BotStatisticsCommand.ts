@@ -43,25 +43,25 @@ const createStatsEmbed = (client: PhonelyClient): EmbedBuilder => {
   return new EmbedBuilder()
     .setColor(Colors.Blue)
     .setTitle("📊 Phonely Bot Statistics")
-    .setDescription("Here's what I've been up to!")
+    .setDescription("📈 Here's what I've been up to!")
     .addFields(
       {
         name: "🤖 Bot Information",
         value: [
-          `**Name:** ${client.user?.tag}`,
-          `**Created:** ${client.user?.createdAt.toLocaleDateString()}`,
-          `**Uptime:** ${formatUptime(client.uptime ?? 0)}`,
-          `**Commands:** ${client.commandManager.getCommands().size}`,
+          `👤 **Name:** ${client.user?.tag}`,
+          `📅 **Created:** ${client.user?.createdAt.toLocaleDateString()}`,
+          `⏱️ **Uptime:** ${formatUptime(client.uptime ?? 0)}`,
+          `⚡ **Commands:** ${client.commandManager.getCommands().size}`,
         ].join("\n"),
         inline: true,
       },
       {
         name: "📈 Statistics",
         value: [
-          `**Servers:** ${client.guilds.cache.size}`,
-          `**Users:** ${client.users.cache.size}`,
-          `**Channels:** ${client.channels.cache.size}`,
-          `**Ping:** ${client.ws.ping}ms`,
+          `🏢 **Servers:** ${client.guilds.cache.size}`,
+          `👥 **Users:** ${client.users.cache.size}`,
+          `📝 **Channels:** ${client.channels.cache.size}`,
+          `📶 **Ping:** ${client.ws.ping}ms`,
         ].join("\n"),
         inline: true,
       },

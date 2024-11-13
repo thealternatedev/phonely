@@ -16,7 +16,7 @@ const COMMANDS_PER_PAGE = 5;
 const COLLECTOR_TIMEOUT = 300_000; // 5 minutes
 const EMBED_COLOR = 0x2b2d31;
 
-// Memoize help embeds for better performance
+// Cache help embeds for performance
 const embedCache = new Map<number, EmbedBuilder>();
 
 function generateHelpEmbed(
@@ -31,19 +31,19 @@ function generateHelpEmbed(
 
   const embed = new EmbedBuilder()
     .setColor(EMBED_COLOR)
-    .setTitle("📞 Phonely - Command List")
+    .setTitle("📱 Phonely - Command List")
     .setDescription(
-      "*Browse through all available commands using the buttons below*",
+      "🔍 *Browse through all available commands using the buttons below*",
     )
     .addFields(
       commands.slice(startIdx, startIdx + COMMANDS_PER_PAGE).map((cmd) => ({
-        name: `${cmd.name}${cmd.aliases?.length ? ` (${cmd.aliases.join(", ")})` : ""}`,
-        value: `> ${cmd.data?.description ?? "No description available"}`,
+        name: `⌨️ ${cmd.name}${cmd.aliases?.length ? ` (${cmd.aliases.join(", ")})` : ""}`,
+        value: `> ${cmd.data?.description ?? "❌ No description available"}`,
         inline: false,
       })),
     )
     .setFooter({
-      text: `Page ${page + 1}/${totalPages} • Made with love by Phonely Team`,
+      text: `📄 Page ${page + 1}/${totalPages} • 💝 Made with love by Phonely Team`,
     })
     .setTimestamp();
 
@@ -79,15 +79,13 @@ const handlePageChange = (
   action: "first" | "prev" | "next" | "last",
   currentPage: number,
   totalPages: number,
-): number => {
-  const actions = {
-    first: () => 0,
-    prev: () => Math.max(0, currentPage - 1),
-    next: () => Math.min(totalPages - 1, currentPage + 1),
-    last: () => totalPages - 1,
-  };
-  return actions[action]();
-};
+): number =>
+  ({
+    first: 0,
+    prev: Math.max(0, currentPage - 1),
+    next: Math.min(totalPages - 1, currentPage + 1),
+    last: totalPages - 1,
+  })[action];
 
 const setupCollector = (
   response: Message | InteractionResponse<true>,
@@ -106,7 +104,7 @@ const setupCollector = (
   collector.on("collect", async (i) => {
     if (i.user.id !== authorId) {
       await i.reply({
-        content: "These buttons are not for you!",
+        content: "🚫 These buttons are not for you!",
         ephemeral: true,
       });
       return;
@@ -134,7 +132,7 @@ const command: Command = {
   aliases: ["h", "commands"],
   data: new SlashCommandBuilder()
     .setName("help")
-    .setDescription("Shows all available commands and how to use them"),
+    .setDescription("📚 Shows all available commands and how to use them"),
 
   async execute(
     client: PhonelyClient,

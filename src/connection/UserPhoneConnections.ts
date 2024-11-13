@@ -1,4 +1,4 @@
-import { TextChannel } from "discord.js";
+import { TextChannel, User } from "discord.js";
 import { PhonelyClient } from "../Phonely";
 import { UserPhoneServer } from "../server/UserPhoneServer";
 import { createErrorEmbed, createSuccessEmbed } from "../utils/embeds";
@@ -15,6 +15,7 @@ export class UserPhoneConnections {
     reply: (
       embed: ReturnType<typeof createErrorEmbed | typeof createSuccessEmbed>,
     ) => Promise<void>,
+    callerId: User,
   ) {
     // Check if channel is already connected or in queue
     const isInQueue = this.client.channelQueue.values().includes(channel);
@@ -44,7 +45,7 @@ export class UserPhoneConnections {
     const queuedChannel = this.client.channelQueue.dequeue();
     if (!queuedChannel) return;
 
-    await this.createConnection(queuedChannel, channel, reply);
+    await this.createConnection(queuedChannel, channel, reply, 60000, callerId);
   }
 
   public async selectiveConnect(
@@ -53,6 +54,7 @@ export class UserPhoneConnections {
     reply: (
       embed: ReturnType<typeof createErrorEmbed | typeof createSuccessEmbed>,
     ) => Promise<void>,
+    callerId: User,
   ) {
     // Check if either channel is already connected
     const isEitherConnected = this.client.activeServers.getIds().some((id) => {
@@ -70,7 +72,7 @@ export class UserPhoneConnections {
         createErrorEmbed("One or both channels are already in a call!"),
       );
 
-    await this.createConnection(channel, targetChannel, reply);
+    await this.createConnection(channel, targetChannel, reply, 60000, callerId);
   }
 
   public async tempConnect(
@@ -79,6 +81,7 @@ export class UserPhoneConnections {
     reply: (
       embed: ReturnType<typeof createErrorEmbed | typeof createSuccessEmbed>,
     ) => Promise<void>,
+    callerId: User,
   ) {
     // Similar to connect but with custom duration
     const isInQueue = this.client.channelQueue.values().includes(channel);
@@ -108,7 +111,13 @@ export class UserPhoneConnections {
     const queuedChannel = this.client.channelQueue.dequeue();
     if (!queuedChannel) return;
 
-    await this.createConnection(queuedChannel, channel, reply, duration);
+    await this.createConnection(
+      queuedChannel,
+      channel,
+      reply,
+      duration,
+      callerId,
+    );
   }
 
   private async createConnection(
@@ -118,6 +127,7 @@ export class UserPhoneConnections {
       embed: ReturnType<typeof createErrorEmbed | typeof createSuccessEmbed>,
     ) => Promise<void>,
     duration: number = 60000,
+    callerId: User,
   ) {
     const serverId =
       Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -125,6 +135,7 @@ export class UserPhoneConnections {
       this.client,
       channelOne,
       channelTwo,
+      callerId,
     );
     this.client.activeServers.add(serverId, phoneServer);
 
@@ -138,11 +149,11 @@ export class UserPhoneConnections {
     ]);
 
     setTimeout(async () => {
-      await this.disconnect(serverId);
+      await this.disconnect(serverId, "Call duration limit reached");
     }, duration);
   }
 
-  public async disconnect(serverId: string) {
+  public async disconnect(serverId: string, reason: string = "Unknown reason") {
     const server = this.client.activeServers.get(serverId);
     if (!server) return;
 
@@ -151,7 +162,7 @@ export class UserPhoneConnections {
     await server.hangup();
 
     const disconnectEmbed = createErrorEmbed(
-      "Call disconnected due to network traffic. Please try connecting again.",
+      `Call disconnected: ${reason}. Please try connecting again.`,
     );
 
     await Promise.all([

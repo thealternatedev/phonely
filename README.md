@@ -1,5 +1,7 @@
 ![Phonely Bot Banner](./assets/phonely_no_text_banner.png)
 
+[![Discord](https://img.shields.io/discord/1306277925745721487?color=7289da&label=Discord&logo=discord&logoColor=white)](https://discord.gg/3DPy6QNQ87)
+
 
 # 📞 Phonely Bot - Connect Your Discord World! 
 
