@@ -3,3 +3,5 @@ build
 .env
 yarn.lock
 
+phonely_server
+changelog-*.chg
