@@ -120,11 +120,15 @@ export class CommandManager {
     console.log(clc.green(`✅ Loaded command: ${command.name}`));
   }
 
-  async loadRestCommands(clientId: string) {
+  async loadRestCommands(client: PhonelyClient) {
     try {
       console.log(clc.blue("🔄 Starting REST command registration..."));
 
-      const rest = new REST().setToken(process.env.DiscordToken!);
+      const rest = new REST().setToken(
+        client.isDevelopment
+          ? process.env.DiscordDevelopmentToken!
+          : process.env.DiscordToken!,
+      );
       const commandsData = [...this.commands.values()]
         .filter((cmd) => cmd.data)
         .map((cmd) => cmd.data!.toJSON());
@@ -135,9 +139,12 @@ export class CommandManager {
         ),
       );
 
-      const result = (await rest.put(Routes.applicationCommands(clientId), {
-        body: commandsData,
-      })) as any[];
+      const result = (await rest.put(
+        Routes.applicationCommands(client.user!.id),
+        {
+          body: commandsData,
+        },
+      )) as any[];
 
       console.log(
         clc.green("✨ Successfully registered application commands!"),

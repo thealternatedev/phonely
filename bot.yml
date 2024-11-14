@@ -51,3 +51,14 @@ database:
   host: localhost
   user: root
   password: ''
+
+
+#===============================================#
+#              Status Embed Settings            #
+#===============================================#
+# Settings for the status embed
+#===============================================#
+
+statusEmbed:
+  # Update interval in milliseconds
+  updateInterval: 5000

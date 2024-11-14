@@ -28,7 +28,9 @@
     "yaml": "^2.6.0"
   },
   "devDependencies": {
+    "@types/cli-color": "^2.0.6",
     "@types/node": "^20.11.16",
+    "@types/yaml": "^1.9.6",
     "prettier": "^3.2.5",
     "tsc": "^2.0.4",
     "typescript": "^5.5.4",

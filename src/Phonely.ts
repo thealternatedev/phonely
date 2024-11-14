@@ -15,6 +15,8 @@ export class PhonelyClient extends Client {
   public readonly activeServers: ActiveServers;
   public readonly databaseManager: DatabaseManager;
   public readonly phonelyService: PhonelyService;
+  public statusUpdateIntervals: Map<string, NodeJS.Timeout>;
+  public isDevelopment: boolean;
 
   public config: BotConfiguration;
 
@@ -31,5 +33,7 @@ export class PhonelyClient extends Client {
     this.activeServers = new ActiveServers();
     this.userPhoneConnections = new UserPhoneConnections(this);
     this.phonelyService = PhonelyService.getInstance(this.databaseManager);
+    this.statusUpdateIntervals = new Map();
+    this.isDevelopment = process.argv.includes("--development");
   }
 }

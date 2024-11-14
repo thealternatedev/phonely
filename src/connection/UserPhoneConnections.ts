@@ -170,4 +170,12 @@ export class UserPhoneConnections {
       server.getReceiverSideChannel().send({ embeds: [disconnectEmbed] }),
     ]);
   }
+
+  public getActiveConnections() {
+    return this.client.activeServers.getAllActiveChannels();
+  }
+
+  public getActiveServers() {
+    return this.client.activeServers.getAllServers();
+  }
 }

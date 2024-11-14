@@ -19,7 +19,19 @@ async function main() {
 
   client.eventManager.putToClient(client);
 
-  client.login(process.env.DiscordToken);
+  // Check if --development flag is present
+  const isDevelopment = process.argv.includes("--development");
+  const token = isDevelopment
+    ? process.env.DiscordDevelopmentToken
+    : process.env.DiscordToken;
+
+  if (!token) {
+    throw new Error(
+      `${isDevelopment ? "DiscordDevelopmentToken" : "DiscordToken"} is not set in environment variables`,
+    );
+  }
+
+  client.login(token);
 }
 
 main();

@@ -7,3 +7,5 @@ phonely_server
 changelog-*.chg
 
 databases
+
+*.zip

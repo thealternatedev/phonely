@@ -11,7 +11,7 @@ export interface UserPhoneServerEvents {
 
 const trustedLinks: string[] = [
   "youtube.com",
-  "x.com", 
+  "x.com",
   "twitter.com",
   "tiktok.com",
   "instagram.com",
@@ -28,12 +28,15 @@ export class UserPhoneServer extends EventEmitter {
 
   // Cache formatted usernames to avoid repeated string operations
   private readonly userNameCache = new Map<string, string>();
-  
+
   // Spam detection
-  private readonly messageHistory = new Map<string, {
-    messages: string[],
-    timestamps: number[]
-  }>();
+  private readonly messageHistory = new Map<
+    string,
+    {
+      messages: string[];
+      timestamps: number[];
+    }
+  >();
   private readonly SPAM_WINDOW = 5000; // 5 seconds
   private readonly MAX_MESSAGES = 5; // Max messages in window
   private readonly SIMILARITY_THRESHOLD = 0.8; // 80% similarity threshold
@@ -84,12 +87,12 @@ export class UserPhoneServer extends EventEmitter {
     const now = Date.now();
     const userHistory = this.messageHistory.get(userId) || {
       messages: [],
-      timestamps: []
+      timestamps: [],
     };
 
     // Remove messages outside the spam window
     while (
-      userHistory.timestamps.length > 0 && 
+      userHistory.timestamps.length > 0 &&
       now - userHistory.timestamps[0] > this.SPAM_WINDOW
     ) {
       userHistory.messages.shift();
@@ -102,7 +105,7 @@ export class UserPhoneServer extends EventEmitter {
     }
 
     // Check message similarity
-    const isSimilar = userHistory.messages.some(msg => {
+    const isSimilar = userHistory.messages.some((msg) => {
       const similarity = this.calculateSimilarity(msg, content);
       return similarity > this.SIMILARITY_THRESHOLD;
     });
@@ -123,9 +126,9 @@ export class UserPhoneServer extends EventEmitter {
     const len1 = str1.length;
     const len2 = str2.length;
     const maxDist = Math.max(len1, len2);
-    
+
     if (maxDist === 0) return 1;
-    
+
     const distance = this.levenshteinDistance(str1, str2);
     return 1 - distance / maxDist;
   }
@@ -133,7 +136,9 @@ export class UserPhoneServer extends EventEmitter {
   private levenshteinDistance(str1: string, str2: string): number {
     const m = str1.length;
     const n = str2.length;
-    const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+    const dp: number[][] = Array(m + 1)
+      .fill(null)
+      .map(() => Array(n + 1).fill(0));
 
     for (let i = 0; i <= m; i++) dp[i][0] = i;
     for (let j = 0; j <= n; j++) dp[0][j] = j;
@@ -143,11 +148,7 @@ export class UserPhoneServer extends EventEmitter {
         if (str1[i - 1] === str2[j - 1]) {
           dp[i][j] = dp[i - 1][j - 1];
         } else {
-          dp[i][j] = 1 + Math.min(
-            dp[i - 1][j],
-            dp[i][j - 1],
-            dp[i - 1][j - 1]
-          );
+          dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
         }
       }
     }
@@ -167,7 +168,8 @@ export class UserPhoneServer extends EventEmitter {
     // Check for spam
     if (this.isSpam(message.author.id, message.content)) {
       message.reply({
-        content: "⚠️ Your message was not sent because it was detected as spam. Please slow down.",
+        content:
+          "⚠️ Your message was not sent because it was detected as spam. Please slow down.",
       });
       return;
     }

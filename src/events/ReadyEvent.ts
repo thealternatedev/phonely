@@ -8,7 +8,7 @@ const event: Event<"ready"> = {
   name: "ready",
   once: true,
   execute: async (client: PhonelyClient) => {
-    await client.commandManager.loadRestCommands(client.user?.id!);
+    await client.commandManager.loadRestCommands(client);
 
     console.clear();
     console.log("\n");

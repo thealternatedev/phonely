@@ -1,6 +1,8 @@
 import { createInterface } from "readline";
 import { PhonelyClient } from "../Phonely";
 import clc from "cli-color";
+import { ChannelType } from "discord.js";
+import { createStatusEmbed } from "./StatusEmbed";
 
 export class CustomInterface {
   private readonly rl;
@@ -158,6 +160,61 @@ export class CustomInterface {
         }
       });
       console.log();
+    });
+
+    this.commands.set("statusembed", async (args) => {
+      if (!args || args.length === 0) {
+        console.log(`${clc.red("✗")} Please provide a channel ID`);
+        return;
+      }
+
+      const channelId = args[0];
+      const channel = this.client.channels.cache.get(channelId);
+
+      if (
+        !channel ||
+        !channel.isTextBased() ||
+        channel.type !== ChannelType.GuildText
+      ) {
+        console.log(`${clc.red("✗")} Invalid channel ID or not a text channel`);
+        return;
+      }
+
+      const updateInterval =
+        (this.client.config.get("statusEmbed.updateInterval") as number) ||
+        5 * 60 * 1000; // Default 5 minutes
+
+      console.log(
+        `${clc.green("✓")} Starting status updates in channel ${clc.magenta(channelId)}`,
+      );
+      console.log(
+        `${clc.yellow("⚡")} Update interval: ${clc.magenta(updateInterval / 1000)}s`,
+      );
+
+      await createStatusEmbed(this.client, channel, updateInterval);
+
+      console.log(`${clc.green("✓")} Status updates started successfully`);
+    });
+
+    this.commands.set("stopstatus", async (args) => {
+      if (!args || args.length === 0) {
+        console.log(`${clc.red("✗")} Please provide a channel ID`);
+        return;
+      }
+
+      const channelId = args[0];
+
+      if (this.client.statusUpdateIntervals?.has(channelId)) {
+        clearInterval(this.client.statusUpdateIntervals.get(channelId));
+        this.client.statusUpdateIntervals.delete(channelId);
+        console.log(
+          `${clc.green("✓")} Status updates stopped for channel ${clc.magenta(channelId)}`,
+        );
+      } else {
+        console.log(
+          `${clc.red("✗")} No active status updates for channel ${clc.magenta(channelId)}`,
+        );
+      }
     });
 
     // Start listening
