@@ -17,22 +17,13 @@ export class UserPhoneConnections {
     ) => Promise<void>,
     callerId: User,
   ) {
-    // Check if channel is already connected or in queue
-    const isInQueue = this.client.channelQueue.values().includes(channel);
-    const isConnected = this.client.activeServers.getIds().some((id) => {
-      const server = this.client.activeServers.get(id);
-      return (
-        server?.getCallerSideChannel().id === channel.id ||
-        server?.getReceiverSideChannel().id === channel.id
-      );
-    });
-
-    if (isInQueue)
+    if (this.client.channelQueue.values().includes(channel)) {
       return reply(createErrorEmbed("This channel is already in the queue!"));
-    if (isConnected)
+    }
+    if (this.client.activeServers.hasChannel(channel.id)) {
       return reply(createErrorEmbed("This channel is already in a call!"));
+    }
 
-    // If queue is empty, add to queue and wait
     if (this.client.channelQueue.size() === 0) {
       this.client.channelQueue.enqueue(channel);
       await reply(
@@ -41,7 +32,6 @@ export class UserPhoneConnections {
       return;
     }
 
-    // Get and remove first channel from queue
     const queuedChannel = this.client.channelQueue.dequeue();
     if (!queuedChannel) return;
 
@@ -56,21 +46,14 @@ export class UserPhoneConnections {
     ) => Promise<void>,
     callerId: User,
   ) {
-    // Check if either channel is already connected
-    const isEitherConnected = this.client.activeServers.getIds().some((id) => {
-      const server = this.client.activeServers.get(id);
-      return (
-        server?.getCallerSideChannel().id === channel.id ||
-        server?.getReceiverSideChannel().id === channel.id ||
-        server?.getCallerSideChannel().id === targetChannel.id ||
-        server?.getReceiverSideChannel().id === targetChannel.id
-      );
-    });
-
-    if (isEitherConnected)
+    if (
+      this.client.activeServers.hasChannel(channel.id) ||
+      this.client.activeServers.hasChannel(targetChannel.id)
+    ) {
       return reply(
         createErrorEmbed("One or both channels are already in a call!"),
       );
+    }
 
     await this.createConnection(channel, targetChannel, reply, 60000, callerId);
   }
@@ -83,20 +66,12 @@ export class UserPhoneConnections {
     ) => Promise<void>,
     callerId: User,
   ) {
-    // Similar to connect but with custom duration
-    const isInQueue = this.client.channelQueue.values().includes(channel);
-    const isConnected = this.client.activeServers.getIds().some((id) => {
-      const server = this.client.activeServers.get(id);
-      return (
-        server?.getCallerSideChannel().id === channel.id ||
-        server?.getReceiverSideChannel().id === channel.id
-      );
-    });
-
-    if (isInQueue)
+    if (this.client.channelQueue.values().includes(channel)) {
       return reply(createErrorEmbed("This channel is already in the queue!"));
-    if (isConnected)
+    }
+    if (this.client.activeServers.hasChannel(channel.id)) {
       return reply(createErrorEmbed("This channel is already in a call!"));
+    }
 
     if (this.client.channelQueue.size() === 0) {
       this.client.channelQueue.enqueue(channel);

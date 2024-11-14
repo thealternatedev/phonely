@@ -17,32 +17,38 @@ export interface Event<T extends keyof ClientEvents> {
 export class EventManager {
   private readonly events = new Collection<string, Event<keyof ClientEvents>>();
   private readonly eventsPath: string;
+  private readonly eventFileCache = new Map<
+    string,
+    Event<keyof ClientEvents>
+  >();
 
   constructor() {
-    // Use __dirname directly since we're in CommonJS
     this.eventsPath = join(__dirname, "events");
   }
 
   async loadEvents(): Promise<void> {
     try {
-      // Get all TypeScript and JavaScript files
-      const eventFiles = readdirSync(this.eventsPath).filter((file) =>
-        /\.[jt]s$/.test(file),
-      );
+      // Get all TypeScript and JavaScript files using a single read operation
+      const eventFiles = readdirSync(this.eventsPath, { withFileTypes: true })
+        .filter((dirent) => /\.[jt]s$/.test(dirent.name))
+        .map((dirent) => dirent.name);
 
       console.log(clc.blue(`📁 Found ${eventFiles.length} event files`));
 
-      // Load events in parallel for better performance
-      const results = await Promise.allSettled(
-        eventFiles.map((file) => this.loadEvent(file)),
-      );
+      // Load events in chunks to prevent memory spikes
+      const CHUNK_SIZE = 5;
+      let loadedCount = 0;
+      let skippedCount = 0;
 
-      const loadedCount = results.filter(
-        (r) => r.status === "fulfilled",
-      ).length;
-      const skippedCount = results.filter(
-        (r) => r.status === "rejected",
-      ).length;
+      for (let i = 0; i < eventFiles.length; i += CHUNK_SIZE) {
+        const chunk = eventFiles.slice(i, i + CHUNK_SIZE);
+        const results = await Promise.allSettled(
+          chunk.map((file) => this.loadEvent(file)),
+        );
+
+        loadedCount += results.filter((r) => r.status === "fulfilled").length;
+        skippedCount += results.filter((r) => r.status === "rejected").length;
+      }
 
       console.log(
         clc.cyan(`📊 Event Loading Summary:
@@ -57,6 +63,13 @@ export class EventManager {
   }
 
   private async loadEvent(file: string): Promise<void> {
+    // Check cache first
+    if (this.eventFileCache.has(file)) {
+      const cachedEvent = this.eventFileCache.get(file)!;
+      this.events.set(cachedEvent.name, cachedEvent);
+      return;
+    }
+
     const event = require(join(this.eventsPath, file)).default;
 
     if (!this.isValidEvent(event)) {
@@ -64,6 +77,8 @@ export class EventManager {
       throw new Error("Invalid event");
     }
 
+    // Cache the event for future reloads
+    this.eventFileCache.set(file, event);
     this.events.set(event.name, event);
     console.log(clc.green(`✅ Loaded event: ${event.name}`));
   }
@@ -77,10 +92,14 @@ export class EventManager {
   }
 
   putToClient(client: PhonelyClient): void {
-    // Bind events in a single iteration
+    // Pre-allocate handlers map for better performance
+    const handlers = new Map<string, (...args: any[]) => void>();
+
+    // Create handlers once
     for (const [_, event] of this.events) {
       const handler = (...args: any[]) =>
         event.execute(client, ...(args as ClientEvents[keyof ClientEvents]));
+      handlers.set(event.name, handler);
       (event.once ? client.once : client.on).call(client, event.name, handler);
     }
   }

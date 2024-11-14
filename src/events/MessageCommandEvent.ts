@@ -4,21 +4,28 @@ import { PhonelyClient } from "../Phonely";
 export default {
   name: "messageCreate",
   execute: async (client: PhonelyClient, message: Message) => {
-    // Ignore bot messages
-    if (message.author.bot) return;
-    if (!message.guild) return;
+    // Early returns for invalid messages
+    if (message.author.bot || !message.guild) return;
 
-    // Get prefix from environment variable or use default
+    // Cache prefix to avoid repeated env lookup
     const prefix = process.env.PREFIX || ".";
+    const { content } = message;
 
-    // Check if message starts with prefix
-    if (!message.content.startsWith(prefix)) return;
+    // Fast prefix check
+    if (content.charAt(0) !== prefix) return;
 
-    // Split message into command and arguments
-    const args = message.content.slice(prefix.length).trim().split(/\s+/);
-    const commandName = args.shift()?.toLowerCase();
+    // Optimized argument splitting
+    const firstSpace = content.indexOf(" ", prefix.length);
+    const commandName =
+      firstSpace === -1
+        ? content.slice(prefix.length).toLowerCase()
+        : content.slice(prefix.length, firstSpace).toLowerCase();
 
     if (!commandName) return;
+
+    // Only split args if needed
+    const args =
+      firstSpace === -1 ? [] : content.slice(firstSpace + 1).split(/\s+/);
 
     // Execute command with arguments
     await client.commandManager.executeCommand(

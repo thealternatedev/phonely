@@ -26,7 +26,7 @@ export interface Command {
   ) => Awaitable<void>;
   data?: SlashCommandBuilder | SlashCommandOptionsOnlyBuilder;
   aliases?: string[];
-  cooldown?: number; // Cooldown in seconds
+  cooldown?: number;
 }
 
 export class CommandManager {
@@ -34,9 +34,9 @@ export class CommandManager {
   private readonly aliases = new Collection<string, string>();
   private readonly commandsPath: string;
   private cooldowns = new Collection<string, Collection<string, number>>();
+  private readonly commandCache = new Map<string, Command>();
 
   constructor() {
-    // Using process.cwd() to get the project root directory
     this.commandsPath = join(process.cwd(), "build", "commands");
   }
 
@@ -49,25 +49,18 @@ export class CommandManager {
       const commandFiles = readdirSync(this.commandsPath).filter((file) =>
         /\.[jt]s$/.test(file),
       );
-
       console.log(clc.blue(`📁 Found ${commandFiles.length} command files`));
 
-      const results = await Promise.allSettled(
-        commandFiles.map((file) => this.loadCommand(file)),
-      );
+      await Promise.all(commandFiles.map((file) => this.loadCommand(file)));
 
-      const loadedCount = results.filter(
-        (r) => r.status === "fulfilled",
-      ).length;
-      const skippedCount = results.filter(
-        (r) => r.status === "rejected",
-      ).length;
+      const loadedCount = this.commands.size;
+      const skippedCount = commandFiles.length - loadedCount;
 
       console.log(
         clc.cyan(`📊 Command Loading Summary:
    ${clc.green("✓")} Successfully loaded: ${loadedCount}
    ${clc.red("✗")} Skipped/Failed: ${skippedCount}
-   📚 Total commands: ${this.commands.size}`),
+   📚 Total commands: ${loadedCount}`),
       );
     } catch (error) {
       console.error(clc.red("❌ Critical error loading commands:"), error);
@@ -79,23 +72,19 @@ export class CommandManager {
     try {
       console.log(clc.blue("🔄 Starting command reload..."));
 
-      // Get current command files
       const commandFiles = readdirSync(this.commandsPath).filter((file) =>
         /\.[jt]s$/.test(file),
       );
 
-      // Clear module cache to force reloading
       for (const file of commandFiles) {
-        const fullPath = join(this.commandsPath, file);
-        delete require.cache[require.resolve(fullPath)];
+        delete require.cache[require.resolve(join(this.commandsPath, file))];
       }
 
-      // Clear existing commands and aliases
       this.commands.clear();
       this.aliases.clear();
       this.cooldowns.clear();
+      this.commandCache.clear();
 
-      // Reload all commands
       await this.loadCommands();
 
       console.log(
@@ -116,7 +105,11 @@ export class CommandManager {
     }
 
     this.commands.set(command.name, command);
-    command.aliases?.forEach((alias) => this.aliases.set(alias, command.name));
+    this.commandCache.set(command.name, command);
+    command.aliases?.forEach((alias) => {
+      this.aliases.set(alias, command.name);
+      this.commandCache.set(alias, command);
+    });
     console.log(clc.green(`✅ Loaded command: ${command.name}`));
   }
 
@@ -124,11 +117,11 @@ export class CommandManager {
     try {
       console.log(clc.blue("🔄 Starting REST command registration..."));
 
-      const rest = new REST().setToken(
-        client.isDevelopment
-          ? process.env.DiscordDevelopmentToken!
-          : process.env.DiscordToken!,
-      );
+      const token = client.isDevelopment
+        ? process.env.DiscordDevelopmentToken!
+        : process.env.DiscordToken!;
+      const rest = new REST().setToken(token);
+
       const commandsData = [...this.commands.values()]
         .filter((cmd) => cmd.data)
         .map((cmd) => cmd.data!.toJSON());
@@ -141,9 +134,7 @@ export class CommandManager {
 
       const result = (await rest.put(
         Routes.applicationCommands(client.user!.id),
-        {
-          body: commandsData,
-        },
+        { body: commandsData },
       )) as any[];
 
       console.log(
@@ -166,44 +157,35 @@ export class CommandManager {
   ) {
     try {
       const command =
-        this.getCommand(commandName) ||
-        this.getCommand(this.aliases.get(commandName) || "");
+        this.commandCache.get(commandName) ||
+        this.commandCache.get(this.aliases.get(commandName) || "");
 
       if (!command) return;
 
-      // Check for cooldown
       const userId =
         source instanceof ChatInputCommandInteraction
           ? source.user.id
           : source.author.id;
-
-      if (!this.cooldowns.has(command.name)) {
-        this.cooldowns.set(command.name, new Collection());
-      }
-
+      const cooldownKey = `${command.name}-${userId}`;
       const now = Date.now();
-      const timestamps = this.cooldowns.get(command.name)!;
-      const cooldownAmount = (command.cooldown || 3) * 1000; // Default 3 second cooldown
+      const cooldownAmount = (command.cooldown || 3) * 1000;
 
-      if (timestamps.has(userId)) {
-        const expirationTime = timestamps.get(userId)! + cooldownAmount;
+      const userCooldowns =
+        this.cooldowns.get(command.name) || new Collection();
+      const expirationTime = userCooldowns.get(userId);
 
-        if (now < expirationTime) {
-          const timeLeft = (expirationTime - now) / 1000;
-          const errorMessage = `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`;
+      if (expirationTime && now < expirationTime) {
+        const timeLeft = (expirationTime - now) / 1000;
+        const errorMessage = `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`;
 
-          if (source instanceof ChatInputCommandInteraction) {
-            return source.reply({ content: errorMessage, ephemeral: true });
-          } else {
-            return source.reply(errorMessage);
-          }
-        }
+        return source instanceof ChatInputCommandInteraction
+          ? source.reply({ content: errorMessage, ephemeral: true })
+          : source.reply(errorMessage);
       }
 
-      timestamps.set(userId, now);
-      setTimeout(() => timestamps.delete(userId), cooldownAmount);
+      userCooldowns.set(userId, now + cooldownAmount);
+      this.cooldowns.set(command.name, userCooldowns);
 
-      // Execute command
       if (source instanceof ChatInputCommandInteraction) {
         await command.execute(client, source);
       } else if (command.executeMessage) {
@@ -211,8 +193,8 @@ export class CommandManager {
       }
     } catch (error) {
       console.error(clc.red(`Error executing command ${commandName}:`), error);
-
       const errorMessage = "There was an error executing this command!";
+
       if (source instanceof ChatInputCommandInteraction) {
         await (source.replied || source.deferred
           ? source.editReply(errorMessage)
@@ -224,7 +206,7 @@ export class CommandManager {
   }
 
   getCommand(name: string): Command | undefined {
-    return this.commands.get(name);
+    return this.commandCache.get(name);
   }
 
   private isValidCommand(command: any): command is Command {

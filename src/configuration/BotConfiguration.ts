@@ -17,8 +17,10 @@ export interface BotConfig {
 export class BotConfiguration {
   private static instance: BotConfiguration;
   private config: BotConfig;
+  private configCache: Map<string, any> = new Map();
   private readonly CONFIG_VERSION = 1;
   private readonly CONFIG_PATH = "./bot.yml";
+  private saveDebounceTimeout?: NodeJS.Timeout;
 
   constructor() {
     this.loadConfig();
@@ -32,6 +34,7 @@ export class BotConfiguration {
     try {
       const fileContents = readFileSync(this.CONFIG_PATH, "utf8");
       this.config = parse(fileContents);
+      this.configCache.clear(); // Clear cache on reload
 
       const version = this.get<number>("config_version");
       if (!version) {
@@ -48,9 +51,19 @@ export class BotConfiguration {
   }
 
   public get<T>(key: string): T | undefined {
-    return key
+    // Check cache first
+    const cached = this.configCache.get(key);
+    if (cached !== undefined) {
+      return cached as T;
+    }
+
+    // If not in cache, compute and store
+    const value = key
       .split(".")
       .reduce((obj: any, part: string) => obj?.[part], this.config) as T;
+
+    this.configCache.set(key, value);
+    return value;
   }
 
   public set<T>(key: string, value: T): void {
@@ -62,10 +75,15 @@ export class BotConfiguration {
     }, this.config);
 
     target[lastKey] = value;
-    this.save();
+    this.configCache.set(key, value); // Update cache
+    this.debouncedSave();
   }
 
   public has(key: string): boolean {
+    // Use cache if available
+    if (this.configCache.has(key)) {
+      return this.configCache.get(key) !== undefined;
+    }
     return this.get(key) !== undefined;
   }
 
@@ -79,8 +97,16 @@ export class BotConfiguration {
 
     if (target) {
       delete target[lastKey];
-      this.save();
+      this.configCache.delete(key); // Clear from cache
+      this.debouncedSave();
     }
+  }
+
+  private debouncedSave(): void {
+    if (this.saveDebounceTimeout) {
+      clearTimeout(this.saveDebounceTimeout);
+    }
+    this.saveDebounceTimeout = setTimeout(() => this.save(), 100);
   }
 
   private save(): void {

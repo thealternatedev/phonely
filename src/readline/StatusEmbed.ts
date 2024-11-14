@@ -1,20 +1,25 @@
-import { ActivityType, ChannelType, Client, EmbedBuilder, GatewayIntentBits, TextChannel } from "discord.js";
+import {
+  ActivityType,
+  ChannelType,
+  Client,
+  EmbedBuilder,
+  GatewayIntentBits,
+  TextChannel,
+} from "discord.js";
 import { PhonelyClient } from "../Phonely";
 
+// Initialize status bot with minimal intents
 const statusBot = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-  ],
+  intents: [GatewayIntentBits.Guilds],
 });
 
-statusBot.on('ready', () => {
-  console.log('Status bot is ready!');
-  statusBot.user?.setActivity('phone calls', { type: ActivityType.Watching });
+statusBot.on("ready", () => {
+  console.log("Status bot is ready!");
+  statusBot.user?.setActivity("phone calls", { type: ActivityType.Watching });
 });
 
 export async function createStatusEmbed(
-  client: PhonelyClient, 
+  client: PhonelyClient,
   channel: TextChannel,
   intervalMs: number = 5000,
 ): Promise<NodeJS.Timeout> {
@@ -23,15 +28,34 @@ export async function createStatusEmbed(
     await statusBot.login(process.env.StatusBotToken);
   }
 
+  // Cache channel reference
+  const statusChannel = await statusBot.channels.fetch(channel.id);
+  if (!statusChannel?.isTextBased() || statusChannel.type !== ChannelType.GuildText) {
+    throw new Error("Invalid status channel");
+  }
+
+  // Pre-fetch initial message
+  const messages = await statusChannel.messages.fetch({ limit: 1 });
+  let statusMessage = messages.first();
+
   const updateEmbed = async () => {
-    const activeConnections = 
-      client.userPhoneConnections.getActiveConnections();
-    const activeServers = client.userPhoneConnections.getActiveServers();
-    const queueSize = client.channelQueue.size();
+    // Get all stats in parallel
+    const [activeConnections, activeServers, queueSize] = await Promise.all([
+      client.userPhoneConnections.getActiveConnections(),
+      client.userPhoneConnections.getActiveServers(),
+      client.channelQueue.size(),
+    ]);
+
+    // Calculate guild stats once
+    const guildSize = client.guilds.cache.size;
+    const totalUsers = client.guilds.cache.reduce(
+      (acc, guild) => acc + guild.memberCount,
+      0
+    );
 
     const embed = new EmbedBuilder()
       .setColor("#FF69B4")
-      .setTitle("📞 Phonely Live Status") 
+      .setTitle("📞 Phonely Live Status")
       .setDescription(
         "```\n" +
         `🔌 Active Calls: ${activeConnections.length}\n` +
@@ -43,12 +67,8 @@ export async function createStatusEmbed(
         {
           name: "📊 Statistics",
           value: [
-            "• Total Guilds: " + client.guilds.cache.size,
-            "• Total Users: " +
-              client.guilds.cache.reduce(
-                (acc, guild) => acc + guild.memberCount,
-                0,
-              ),
+            "• Total Guilds: " + guildSize,
+            "• Total Users: " + totalUsers,
             "• Uptime: " + formatUptime(client.uptime ?? 0),
           ].join("\n"),
           inline: false,
@@ -57,28 +77,25 @@ export async function createStatusEmbed(
           name: "💡 Quick Tips",
           value: [
             "• Use `/call` to start a random call",
-            "• Use `/help` to see all commands", 
+            "• Use `/help` to see all commands",
             "• Calls auto-disconnect after inactivity",
           ].join("\n"),
           inline: false,
-        },
+        }
       )
       .setTimestamp()
       .setFooter({
         text: "Updates every " + intervalMs / 1000 + " seconds • Last updated",
       });
 
-    // Get the channel through status bot instead
-    const statusChannel = await statusBot.channels.fetch(channel.id);
-    if (!statusChannel || !statusChannel.isTextBased() || statusChannel.type !== ChannelType.GuildText) return;
-
-    const messages = await statusChannel.messages.fetch({ limit: 1 });
-    const statusMessage = messages.first();
-
-    if (statusMessage) {
-      await statusMessage.edit({ embeds: [embed] });
-    } else {
-      await statusChannel.send({ embeds: [embed] });
+    try {
+      if (statusMessage) {
+        statusMessage = await statusMessage.edit({ embeds: [embed] });
+      } else {
+        statusMessage = await statusChannel.send({ embeds: [embed] });
+      }
+    } catch (error) {
+      console.error("Failed to update status embed:", error);
     }
   };
 
@@ -88,11 +105,25 @@ export async function createStatusEmbed(
   return interval;
 }
 
+// Memoized uptime formatter using a cache of common values
+const uptimeCache = new Map<number, string>();
 function formatUptime(ms: number): string {
+  const cachedResult = uptimeCache.get(ms);
+  if (cachedResult) return cachedResult;
+
   const seconds = Math.floor(ms / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  return `${days}d ${hours % 24}h ${minutes % 60}m ${seconds % 60}s`;
+  const result = `${days}d ${hours % 24}h ${minutes % 60}m ${seconds % 60}s`;
+  uptimeCache.set(ms, result);
+  
+  // Prevent memory leaks by limiting cache size
+  if (uptimeCache.size > 1000) {
+    const firstKey = uptimeCache.keys().next().value;
+    uptimeCache.delete(firstKey);
+  }
+  
+  return result;
 }

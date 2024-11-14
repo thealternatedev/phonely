@@ -7,15 +7,14 @@ export default {
     client: PhonelyClient,
     interaction: ChatInputCommandInteraction<"cached">,
   ) => {
-    // Only handle slash commands
-    if (!interaction.isChatInputCommand()) return;
+    // Fast type check using property access
+    if (!("commandName" in interaction)) return;
 
-    // Get command name and execute it
-    const commandName = interaction.commandName;
+    // Execute command directly without variable assignment
     await client.commandManager.executeCommand(
       client,
       interaction,
-      commandName,
+      interaction.commandName,
     );
   },
 };

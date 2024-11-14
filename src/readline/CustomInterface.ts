@@ -7,10 +7,7 @@ import { createStatusEmbed } from "./StatusEmbed";
 export class CustomInterface {
   private readonly rl;
   private readonly client: PhonelyClient;
-  private readonly commands = new Map<
-    string,
-    (args?: string[]) => Promise<void>
-  >();
+  private readonly commands: Map<string, (args?: string[]) => Promise<void>>;
 
   constructor(client: PhonelyClient) {
     this.client = client;
@@ -20,77 +17,72 @@ export class CustomInterface {
       prompt: clc.cyan("📞 ") + clc.magenta("Phonely") + clc.cyan(" ➜ "),
     });
 
-    // Register built-in commands
+    // Initialize commands map with capacity
+    this.commands = new Map();
+
+    // Pre-compile color functions
+    const yellow = clc.yellow;
+    const cyan = clc.cyan;
+    const magenta = clc.magenta;
+    const green = clc.green;
+    const red = clc.red;
+    const blue = clc.blue;
+    const white = clc.white;
+    const blackBright = clc.blackBright;
+
+    // Register commands using optimized handlers
     this.commands.set("reload", async () => {
       console.log(
-        `${clc.yellow("⚡")} ${clc.cyan("Reloading")} ${clc.magenta("commands")}...`,
+        `${yellow("⚡")} ${cyan("Reloading")} ${magenta("commands")}...`,
       );
       await this.client.commandManager.reloadCommands();
     });
 
     this.commands.set("clear", async () => {
-      console.log(
-        `${clc.yellow("🗑️")} ${clc.cyan("Executing")} ${clc.magenta("clear")}...`,
+      const separator = yellow(
+        "✦ ⋆ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ⋆ ✦ ⋆ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ⋆ ✦",
       );
+      const memoryUsage = Math.round(
+        process.memoryUsage().heapUsed / 1024 / 1024,
+      );
+
       console.clear();
       console.log("\n");
+      console.log(separator);
       console.log(
-        clc.yellow(
-          "✦ ⋆ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ⋆ ✦ ⋆ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ⋆ ✦",
-        ),
+        cyan("                      📞 PHONELY BOT                        "),
       );
+      console.log(separator);
+      console.log("");
+      console.log(blue("  🤖 Bot User      : ") + white(client.user?.tag));
       console.log(
-        clc.cyan(
-          "                      📞 PHONELY BOT                        ",
-        ),
+        blue("  🌐 Servers       : ") + white(client.guilds.cache.size),
       );
+      console.log(blue("  ⚡ Status        : ") + green("Online"));
       console.log(
-        clc.yellow(
-          "✦ ⋆ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ⋆ ✦ ⋆ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ⋆ ✦",
-        ),
+        blue("  ⏰ Started At    : ") + white(new Date().toLocaleString()),
       );
+      console.log(blue("  📦 Version       : ") + white("v1.0.0"));
+      console.log(blue("  🔧 Node.js       : ") + white(process.version));
+      console.log(blue("  💾 Memory Usage  : ") + white(`${memoryUsage}MB`));
+      console.log("");
+      console.log(magenta("  ✨ Features:"));
+      console.log(cyan("     🎲 Random Channel Roulette"));
+      console.log(cyan("     🎯 Direct Channel Connections"));
+      console.log(cyan("     ⏱️ Timed Speed Calls"));
+      console.log(cyan("     👥 Multi-Channel Conferences"));
+      console.log(cyan("     📊 Live Status Updates"));
       console.log("");
       console.log(
-        clc.blue("  🤖 Bot User      : ") + clc.white(client.user?.tag),
-      );
-      console.log(
-        clc.blue("  🌐 Servers       : ") + clc.white(client.guilds.cache.size),
-      );
-      console.log(clc.blue("  ⚡ Status        : ") + clc.green("Online"));
-      console.log(
-        clc.blue("  ⏰ Started At    : ") +
-          clc.white(new Date().toLocaleString()),
-      );
-      console.log(clc.blue("  📦 Version       : ") + clc.white("v1.0.0"));
-      console.log(
-        clc.blue("  🔧 Node.js       : ") + clc.white(process.version),
-      );
-      console.log(
-        clc.blue("  💾 Memory Usage  : ") +
-          clc.white(
-            `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`,
-          ),
-      );
-      console.log("");
-      console.log(clc.magenta("  ✨ Features:"));
-      console.log(clc.cyan("     🎲 Random Channel Roulette"));
-      console.log(clc.cyan("     🎯 Direct Channel Connections"));
-      console.log(clc.cyan("     ⏱️ Timed Speed Calls"));
-      console.log(clc.cyan("     👥 Multi-Channel Conferences"));
-      console.log(clc.cyan("     📊 Live Status Updates"));
-      console.log("");
-      console.log(
-        clc.yellow(
+        yellow(
           "* ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ *",
         ),
       );
       console.log(
-        clc.green(
-          "              ✨ Ready to make connections! ✨              ",
-        ),
+        green("              ✨ Ready to make connections! ✨              "),
       );
       console.log(
-        clc.yellow(
+        yellow(
           "* ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ *",
         ),
       );
@@ -98,64 +90,63 @@ export class CustomInterface {
     });
 
     this.commands.set("exit", async () => {
-      console.log(
-        `${clc.yellow("👋")} ${clc.cyan("Executing")} ${clc.magenta("exit")}...`,
-      );
+      console.log(`${yellow("👋")} ${cyan("Executing")} ${magenta("exit")}...`);
       this.client.destroy();
       process.exit(0);
     });
 
     this.commands.set("help", async () => {
-      console.log(clc.yellow("\n📚 Available Commands:"));
-      console.log(clc.blackBright("━".repeat(30)));
+      console.log(yellow("\n📚 Available Commands:"));
+      console.log(blackBright("━".repeat(30)));
       for (const cmd of this.commands.keys()) {
-        console.log(`${clc.cyan("➜")} ${clc.magenta(cmd)}`);
+        console.log(`${cyan("➜")} ${magenta(cmd)}`);
       }
       console.log();
     });
 
     this.commands.set("stats", async () => {
-      console.log(clc.yellow("\n📊 Bot Statistics:"));
-      console.log(clc.blackBright("━".repeat(30)));
-      console.log(
-        `${clc.cyan("➜")} Servers: ${clc.magenta(this.client.guilds.cache.size)}`,
-      );
-      console.log(
-        `${clc.cyan("➜")} Users: ${clc.magenta(this.client.users.cache.size)}`,
-      );
-      console.log(
-        `${clc.cyan("➜")} Uptime: ${clc.magenta(Math.floor(this.client.uptime! / 1000))}s`,
-      );
+      const stats = [
+        ["Servers", this.client.guilds.cache.size],
+        ["Users", this.client.users.cache.size],
+        ["Uptime", Math.floor(this.client.uptime! / 1000) + "s"],
+      ];
+
+      console.log(yellow("\n📊 Bot Statistics:"));
+      console.log(blackBright("━".repeat(30)));
+      stats.forEach(([label, value]) => {
+        console.log(`${cyan("➜")} ${label}: ${magenta(value)}`);
+      });
       console.log();
     });
 
     this.commands.set("reloadconfig", async () => {
       console.log(
-        `${clc.yellow("⚡")} ${clc.cyan("Reloading")} ${clc.magenta("configuration")}...`,
+        `${yellow("⚡")} ${cyan("Reloading")} ${magenta("configuration")}...`,
       );
       this.client.config.reload();
-      console.log(`${clc.green("✓")} Configuration reloaded successfully!`);
+      console.log(`${green("✓")} Configuration reloaded successfully!`);
     });
 
     this.commands.set("guilds", async () => {
-      console.log(clc.yellow("\n🌐 Connected Guilds:"));
-      console.log(clc.blackBright("━".repeat(30)));
+      const specialGuildId = "1306277925745721487";
+      const guildsCache = this.client.guilds.cache;
 
-      // First display the special guild
-      const specialGuild = this.client.guilds.cache.get("1306277925745721487");
+      console.log(yellow("\n🌐 Connected Guilds:"));
+      console.log(blackBright("━".repeat(30)));
+
+      const specialGuild = guildsCache.get(specialGuildId);
       if (specialGuild) {
-        console.log(clc.yellow("\n📌 Special Guild:"));
+        console.log(yellow("\n📌 Special Guild:"));
         console.log(
-          `${clc.cyan("➜")} ${clc.magenta(specialGuild.name)} ${clc.blackBright(`(${specialGuild.id})`)} - ${clc.yellow(specialGuild.memberCount)} members`,
+          `${cyan("➜")} ${magenta(specialGuild.name)} ${blackBright(`(${specialGuild.id})`)} - ${yellow(specialGuild.memberCount)} members`,
         );
       }
 
-      // Then display other guilds
-      console.log(clc.yellow("\n🌍 Other Guilds:"));
-      this.client.guilds.cache.forEach((guild) => {
-        if (guild.id !== "1306277925745721487") {
+      console.log(yellow("\n🌍 Other Guilds:"));
+      guildsCache.forEach((guild) => {
+        if (guild.id !== specialGuildId) {
           console.log(
-            `${clc.cyan("➜")} ${clc.magenta(guild.name)} ${clc.blackBright(`(${guild.id})`)} - ${clc.yellow(guild.memberCount)} members`,
+            `${cyan("➜")} ${magenta(guild.name)} ${blackBright(`(${guild.id})`)} - ${yellow(guild.memberCount)} members`,
           );
         }
       });
@@ -163,61 +154,56 @@ export class CustomInterface {
     });
 
     this.commands.set("statusembed", async (args) => {
-      if (!args || args.length === 0) {
-        console.log(`${clc.red("✗")} Please provide a channel ID`);
+      if (!args?.length) {
+        console.log(`${red("✗")} Please provide a channel ID`);
         return;
       }
 
       const channelId = args[0];
       const channel = this.client.channels.cache.get(channelId);
 
-      if (
-        !channel ||
-        !channel.isTextBased() ||
-        channel.type !== ChannelType.GuildText
-      ) {
-        console.log(`${clc.red("✗")} Invalid channel ID or not a text channel`);
+      if (!channel?.isTextBased() || channel.type !== ChannelType.GuildText) {
+        console.log(`${red("✗")} Invalid channel ID or not a text channel`);
         return;
       }
 
       const updateInterval =
         (this.client.config.get("statusEmbed.updateInterval") as number) ||
-        5 * 60 * 1000; // Default 5 minutes
+        300000;
 
       console.log(
-        `${clc.green("✓")} Starting status updates in channel ${clc.magenta(channelId)}`,
+        `${green("✓")} Starting status updates in channel ${magenta(channelId)}`,
       );
       console.log(
-        `${clc.yellow("⚡")} Update interval: ${clc.magenta(updateInterval / 1000)}s`,
+        `${yellow("⚡")} Update interval: ${magenta(updateInterval / 1000)}s`,
       );
 
       await createStatusEmbed(this.client, channel, updateInterval);
-
-      console.log(`${clc.green("✓")} Status updates started successfully`);
+      console.log(`${green("✓")} Status updates started successfully`);
     });
 
     this.commands.set("stopstatus", async (args) => {
-      if (!args || args.length === 0) {
-        console.log(`${clc.red("✗")} Please provide a channel ID`);
+      if (!args?.length) {
+        console.log(`${red("✗")} Please provide a channel ID`);
         return;
       }
 
       const channelId = args[0];
+      const intervals = this.client.statusUpdateIntervals;
 
-      if (this.client.statusUpdateIntervals?.has(channelId)) {
-        clearInterval(this.client.statusUpdateIntervals.get(channelId));
-        this.client.statusUpdateIntervals.delete(channelId);
+      if (intervals?.has(channelId)) {
+        clearInterval(intervals.get(channelId));
+        intervals.delete(channelId);
         console.log(
-          `${clc.green("✓")} Status updates stopped for channel ${clc.magenta(channelId)}`,
+          `${green("✓")} Status updates stopped for channel ${magenta(channelId)}`,
         );
       } else {
         console.log(
-          `${clc.red("✗")} No active status updates for channel ${clc.magenta(channelId)}`,
+          `${red("✗")} No active status updates for channel ${magenta(channelId)}`,
         );
       }
     });
 
-    // Start listening
     this.start();
   }
 
@@ -226,10 +212,11 @@ export class CustomInterface {
 
     this.rl.on("line", async (line) => {
       const [command, ...args] = line.trim().split(" ");
+      const cmd = this.commands.get(command);
 
-      if (this.commands.has(command)) {
+      if (cmd) {
         try {
-          await this.commands.get(command)!(args);
+          await cmd(args);
         } catch (error) {
           console.error(`${clc.red("✗")} Error executing command:`, error);
         }

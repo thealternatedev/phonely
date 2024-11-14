@@ -4,8 +4,8 @@
   "description": "A Discord bot for creating phone-like connections between channels",
   "main": "src/main.ts",
   "scripts": {
-    "start": "npm run format && npm run build && node build/main.js",
-    "build": "yarn tsc",
+    "start": "yarn --silent format && yarn --silent build && node build/main.js",
+    "build": "yarn --silent tsc",
     "format": "prettier --write \"src/**/*.ts\""
   },
   "keywords": [
@@ -20,6 +20,7 @@
   "dependencies": {
     "better-sqlite3": "^11.5.0",
     "cli-color": "^2.0.4",
+    "commander": "^12.1.0",
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
     "mongoose": "^8.8.1",

@@ -2,134 +2,109 @@ import { UserPhoneServer } from "./UserPhoneServer";
 import { TextChannel } from "discord.js";
 
 /**
- * Manages active phone server connections with efficient storage and retrieval.
- * Uses a plain object without prototype for maximum memory efficiency.
+ * Manages active phone server connections with zero overhead data structures.
+ * Uses Map for O(1) operations and minimal memory footprint.
  */
 export class ActiveServers {
-  /** Map of server IDs to UserPhoneServer instances */
-  private servers: Record<string, UserPhoneServer>;
+  /** Primary Map for server storage with O(1) access */
+  private servers: Map<string, UserPhoneServer>;
 
-  /**
-   * Creates a new ActiveServers instance with an empty servers object.
-   * Uses Object.create(null) for a "pure" object with no prototype chain.
-   */
+  /** Secondary index for fast channel lookups */
+  private channelIndex: Map<string, [string, UserPhoneServer]>;
+
   constructor() {
-    this.servers = Object.create(null);
+    this.servers = new Map();
+    this.channelIndex = new Map();
   }
 
-  /**
-   * Adds a new server to the active servers collection.
-   * @param id - Unique identifier for the server
-   * @param server - UserPhoneServer instance to add
-   */
   public add(id: string, server: UserPhoneServer): void {
-    this.servers[id] = server;
+    this.servers.set(id, server);
+    // Index both channels for O(1) lookup
+    const callerChannel = server.getCallerSideChannel();
+    const receiverChannel = server.getReceiverSideChannel();
+    this.channelIndex.set(callerChannel.id, [id, server]);
+    this.channelIndex.set(receiverChannel.id, [id, server]);
   }
 
-  /**
-   * Removes a server from the active servers collection.
-   * @param id - ID of the server to remove
-   */
   public remove(id: string): void {
-    delete this.servers[id];
+    const server = this.servers.get(id);
+    if (server) {
+      // Clean up channel index
+      this.channelIndex.delete(server.getCallerSideChannel().id);
+      this.channelIndex.delete(server.getReceiverSideChannel().id);
+      this.servers.delete(id);
+    }
   }
 
-  /**
-   * Retrieves a server by its ID.
-   * @param id - ID of the server to get
-   * @returns The UserPhoneServer instance if found, undefined otherwise
-   */
   public get(id: string): UserPhoneServer | undefined {
-    return this.servers[id];
+    return this.servers.get(id);
   }
 
-  /**
-   * Gets an array of all active server IDs.
-   * @returns Array of server ID strings
-   */
   public getIds(): string[] {
-    return Object.keys(this.servers);
+    return Array.from(this.servers.keys());
   }
 
-  /**
-   * Gets the total number of active servers.
-   * @returns Number of active servers
-   */
   public count(): number {
-    return Object.keys(this.servers).length;
+    return this.servers.size;
   }
 
-  /**
-   * Checks if a server ID exists in the collection.
-   * @param id - ID to check
-   * @returns True if server exists, false otherwise
-   */
   public has(id: string): boolean {
-    return id in this.servers;
+    return this.servers.has(id);
   }
 
-  /**
-   * Gets all active server instances.
-   * @returns Array of UserPhoneServer instances
-   */
+  public hasChannel(channelId: string): boolean {
+    return this.channelIndex.has(channelId);
+  }
+
   public getAllServers(): UserPhoneServer[] {
-    return Object.values(this.servers);
+    return Array.from(this.servers.values());
   }
 
-  /**
-   * Finds a server by a channel that's part of it.
-   * @param channel - Channel to search for
-   * @returns Server ID and instance if found, undefined otherwise
-   */
   public findByChannel(
     channel: TextChannel,
   ): [string, UserPhoneServer] | undefined {
-    const entry = Object.entries(this.servers).find(
-      ([_, server]) =>
-        server.getCallerSideChannel().id === channel.id ||
-        server.getReceiverSideChannel().id === channel.id,
-    );
-    return entry;
+    return this.channelIndex.get(channel.id);
   }
 
-  /**
-   * Checks if a channel is part of any active server.
-   * @param channel - Channel to check
-   * @returns True if channel is in an active call, false otherwise
-   */
   public isChannelActive(channel: TextChannel): boolean {
-    return this.findByChannel(channel) !== undefined;
+    return this.channelIndex.has(channel.id);
   }
 
-  /**
-   * Removes all servers from the collection.
-   */
   public clear(): void {
-    this.servers = Object.create(null);
+    this.servers.clear();
+    this.channelIndex.clear();
   }
 
-  /**
-   * Gets an array of all channels currently in calls.
-   * @returns Array of active TextChannels
-   */
   public getAllActiveChannels(): TextChannel[] {
-    return this.getAllServers().flatMap((server) => [
-      server.getCallerSideChannel(),
-      server.getReceiverSideChannel(),
-    ]);
+    const channels: TextChannel[] = [];
+    for (const server of this.servers.values()) {
+      channels.push(
+        server.getCallerSideChannel(),
+        server.getReceiverSideChannel(),
+      );
+    }
+    return channels;
   }
 
-  /**
-   * Gets the partner channel for a given channel in a call.
-   * @param channel - Channel to find partner for
-   * @returns Partner TextChannel if found, undefined otherwise
-   */
   public getPartnerChannel(channel: TextChannel): TextChannel | undefined {
-    const server = this.findByChannel(channel)?.[1];
-    if (!server) return undefined;
+    const serverEntry = this.channelIndex.get(channel.id);
+    if (!serverEntry) return undefined;
 
+    const server = serverEntry[1];
     return server.getCallerSideChannel().id === channel.id
       ? server.getReceiverSideChannel()
       : server.getCallerSideChannel();
+  }
+
+  public getServerByChannel(channelId: string): UserPhoneServer | undefined {
+    const entry = this.channelIndex.get(channelId);
+    return entry ? entry[1] : undefined;
+  }
+
+  public removeByChannel(channelId: string): void {
+    const entry = this.channelIndex.get(channelId);
+    if (entry) {
+      this.remove(entry[0]);
+    }
   }
 }

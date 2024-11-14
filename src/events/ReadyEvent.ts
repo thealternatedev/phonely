@@ -5,109 +5,78 @@ import { CustomInterface } from "../readline/CustomInterface";
 import clc from "cli-color";
 
 const event: Event<"ready"> = {
-  name: "ready",
+  name: "ready", 
   once: true,
   execute: async (client: PhonelyClient) => {
+    // Load commands first for faster startup
     await client.commandManager.loadRestCommands(client);
 
-    console.clear();
-    console.log("\n");
-    console.log(
-      clc.yellow(
-        "✦ ⋆ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ⋆ ✦ ⋆ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ⋆ ✦",
-      ),
-    );
-    console.log(
-      clc.cyan("                      📞 PHONELY BOT                        "),
-    );
-    console.log(
-      clc.yellow(
-        "✦ ⋆ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ⋆ ✦ ⋆ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ⋆ ✦",
-      ),
-    );
-    console.log("");
-    console.log(
-      clc.blue("  🤖 Bot User      : ") + clc.white(client.user?.tag),
-    );
-    console.log(
-      clc.blue("  🌐 Servers       : ") + clc.white(client.guilds.cache.size),
-    );
-    console.log(clc.blue("  ⚡ Status        : ") + clc.green("Online"));
-    console.log(
-      clc.blue("  ⏰ Started At    : ") +
-        clc.white(new Date().toLocaleString()),
-    );
-    console.log(clc.blue("  📦 Version       : ") + clc.white("v1.0.0"));
-    console.log(clc.blue("  🔧 Node.js       : ") + clc.white(process.version));
-    console.log(
-      clc.blue("  💾 Memory Usage  : ") +
-        clc.white(
-          `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`,
-        ),
-    );
-    console.log("");
-    console.log(clc.magenta("  ✨ Features:"));
-    console.log(clc.cyan("     🎲 Random Channel Roulette"));
-    console.log(clc.cyan("     🎯 Direct Channel Connections"));
-    console.log(clc.cyan("     ⏱️ Timed Speed Calls"));
-    console.log(clc.cyan("     👥 Multi-Channel Conferences"));
-    console.log(clc.cyan("     📊 Live Status Updates"));
-    console.log("");
-    console.log(
-      clc.yellow(
-        "* ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ *",
-      ),
-    );
-    console.log(
-      clc.green("              ✨ Ready to make connections! ✨              "),
-    );
-    console.log(
-      clc.yellow(
-        "* ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ *",
-      ),
-    );
-    console.log("\n");
+    // Pre-calculate values used multiple times
+    const guildSize = client.guilds.cache.size;
+    const memoryUsage = `${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`;
+    const userTag = client.user?.tag;
+    const startTime = new Date().toLocaleString();
 
-    // Set up rotating presence
-    let presenceIndex = 0;
+    // Prepare presence data
     const presences = [
-      {
-        type: ActivityType.Playing,
-        message: "📞 Connecting Discord Worlds 🌍",
-      },
-      {
-        type: ActivityType.Watching,
-        message: `${client.guilds.cache.size} Servers Connect 🔌`,
-      },
-      {
-        type: ActivityType.Listening,
-        message: "Cross-Server Conversations 🗣️",
-      },
+      { type: ActivityType.Playing, message: "📞 Connecting Discord Worlds 🌍" },
+      { type: ActivityType.Watching, message: `${guildSize} Servers Connect 🔌` },
+      { type: ActivityType.Listening, message: "Cross-Server Conversations 🗣️" },
       { type: ActivityType.Playing, message: "Try /help to Get Started ⭐" },
       { type: ActivityType.Playing, message: "Phone Roulette 🎲" },
       { type: ActivityType.Watching, message: "Channels Connect 🔄" },
       { type: ActivityType.Listening, message: "Conference Calls 👥" },
       { type: ActivityType.Playing, message: "Making New Friends 🤝" },
-      { type: ActivityType.Watching, message: "Messages Flow 📨" },
+      { type: ActivityType.Watching, message: "Messages Flow 📨" }
     ];
 
-    // Update presence immediately
+    // Set initial presence immediately
     client.user?.setPresence({
       activities: [{ name: presences[0].message, type: presences[0].type }],
-      status: "online",
+      status: "online"
     });
 
-    // Rotate presence every 15 seconds
+    // Batch console outputs to reduce I/O operations
+    const output = [
+      "\n",
+      clc.yellow("✦ ⋆ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ⋆ ✦ ⋆ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ⋆ ✦"),
+      clc.cyan("                      📞 PHONELY BOT                        "),
+      clc.yellow("✦ ⋆ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ⋆ ✦ ⋆ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ┈ ⋆ ✦"),
+      "",
+      clc.blue("  🤖 Bot User      : ") + clc.white(userTag),
+      clc.blue("  🌐 Servers       : ") + clc.white(guildSize),
+      clc.blue("  ⚡ Status        : ") + clc.green("Online"),
+      clc.blue("  ⏰ Started At    : ") + clc.white(startTime),
+      clc.blue("  📦 Version       : ") + clc.white("v1.0.0"),
+      clc.blue("  🔧 Node.js       : ") + clc.white(process.version),
+      clc.blue("  💾 Memory Usage  : ") + clc.white(memoryUsage),
+      "",
+      clc.magenta("  ✨ Features:"),
+      clc.cyan("     🎲 Random Channel Roulette"),
+      clc.cyan("     🎯 Direct Channel Connections"),
+      clc.cyan("     ⏱️ Timed Speed Calls"),
+      clc.cyan("     👥 Multi-Channel Conferences"),
+      clc.cyan("     📊 Live Status Updates"),
+      "",
+      clc.yellow("* ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ *"),
+      clc.green("              ✨ Ready to make connections! ✨              "),
+      clc.yellow("* ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ ・ *"),
+      "\n"
+    ].join("\n");
+
+    console.clear();
+    console.log(output);
+
+    // Use a more efficient presence rotation with a single interval
+    let presenceIndex = 0;
     setInterval(() => {
       presenceIndex = (presenceIndex + 1) % presences.length;
       client.user?.setPresence({
-        activities: [
-          {
-            name: presences[presenceIndex].message,
-            type: presences[presenceIndex].type,
-          },
-        ],
-        status: "online",
+        activities: [{ 
+          name: presences[presenceIndex].message,
+          type: presences[presenceIndex].type
+        }],
+        status: "online"
       });
     }, 15000);
 

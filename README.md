@@ -49,6 +49,7 @@ Transform your Discord server into a vibrant communication hub with Phonely Bot 
 ✅ Database Support  
 ✅ Trafficking Management  
 ✅ Untrusted Link Blocking System  
+❌ Redis Support
 ❌ Custom Connection Durations  
 ❌ Voice Channel Support  
 ❌ File Sharing Capabilities   
